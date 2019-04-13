@@ -1,0 +1,14 @@
+#ifndef QT_UTILS_SETUP_H
+#define QT_UTILS_SETUP_H
+
+
+#if defined(QT_UTILS_NAMESPACE)
+#	define QT_UTILS_NAMESPACE_BEGIN namespace QT_UTILS_NAMESPACE {
+#	define QT_UTILS_NAMESPACE_END }
+#else
+#	define QT_UTILS_NAMESPACE_BEGIN
+#	define QT_UTILS_NAMESPACE_END
+#endif
+
+
+#endif
