@@ -33,16 +33,25 @@ QT_UTILS_NAMESPACE_BEGIN
 	public:
 
 		//!
-		//! Default constructor
+		//! Default constructor. This will initialize the settings to be stored in the QStandardPaths::AppDataLocation in
+		//! a Settings.ini file.
 		//!
 		Settings(void)
-			: QSettings(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "Settings.ini", QSettings::IniFormat)
+			: Settings(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/Settings.ini", QSettings::IniFormat)
+		{
+		}
+
+		//!
+		//! Construct the settings with a given file @p path and @p format. This uses
+		//! QSettings::QSettings(const QString &, QSettings::Format)
+		//!
+		Settings(const QString & path, QSettings::Format format)
+			: QSettings(path, format)
 		{
 			Q_ASSERT(Instance == nullptr);
 			Q_ASSERT(this->isWritable() == true);
 			Instance = this;
 		}
-
 
 		// singleton-like
 		static Settings * Instance;
