@@ -28,7 +28,7 @@ QT_UTILS_NAMESPACE_BEGIN
 
 	signals:
 
-		void settingChanged(QString key, QVariant oldValue, QVariant newValue);
+		void settingChanged(QString key, QVariant oldValue, QVariant value);
 
 	public:
 
@@ -55,7 +55,7 @@ QT_UTILS_NAMESPACE_BEGIN
 		//!
 		//! Get a setting value
 		//!
-		Q_INVOKABLE QVariant get(const QString & name, QVariant defaultValue) const;
+		Q_INVOKABLE QVariant get(const QString & name, QVariant defaultValue) const
 		{
 			return QSettings::value(name, defaultValue);
 		}
@@ -121,12 +121,16 @@ QT_UTILS_NAMESPACE_BEGIN
 		return Instance->init(name, value);
 	}
 
-#if defined(QT_UTILS_IMPLEMENTATION)
-
-	// statics
-	Settings * Settings::Instance = nullptr;
+QT_UTILS_NAMESPACE_END
 
 #endif
+
+#if defined(QT_UTILS_IMPLEMENTATION)
+
+QT_UTILS_NAMESPACE_BEGIN
+
+// statics
+Settings * Settings::Instance = nullptr;
 
 QT_UTILS_NAMESPACE_END
 
