@@ -19,6 +19,9 @@ Also, most utilities are header only, but some of them might require some implem
 static member for instance) This is handled by defining `QT_UTILS_IMPLEMENTATION` in a cpp file and
 including again those headers.
 
+Finally, since we're dealing with Qt, don't forget to `moc` them ! This means that it's required to add
+the files to your projects files (in your qmake project file, CMake one, etc.)
+
 Here is a complete example:
 
 ```cpp
