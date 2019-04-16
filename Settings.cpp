@@ -1,5 +1,6 @@
 #include "./Settings.h"
 
+#include <QApplication>
 #include <QStandardPaths>
 
 
@@ -10,20 +11,21 @@ QT_UTILS_NAMESPACE_BEGIN
 	const QSettings::Format		Settings::CustomFormat	= Settings::RegisterFormat();
 
 	//!
-	//! Default constructor. This will initialize the settings to be stored in the QStandardPaths::AppDataLocation in
-	//! a Settings.bin file.
+	//! Default constructor. This will initialize the instance to store settings in
+	//! a `Settings.bin` file located in the directory returned by
+	//! `QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)`
 	//!
 	Settings::Settings(void)
-		: Settings(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation))
+		: Settings(QString("%1/Settings.bin")
+			.arg(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)))
 	{
 	}
 
 	//!
-	//! Initialize the settings so that the settings file will be stored in @p directory (using
-	//! 'Settings.bin' as the file name)
+	//! Initialize the settings so that the settings file will be stored in @p path file
 	//!
-	Settings::Settings(const QString & directory)
-		: Settings(directory + "/Settings.bin", CustomFormat)
+	Settings::Settings(const QString & path)
+		: Settings(path, CustomFormat)
 	{
 	}
 
@@ -42,22 +44,25 @@ QT_UTILS_NAMESPACE_BEGIN
 	//!
 	//! Get a setting value
 	//!
-	QVariant Settings::get(const QString & name, QVariant defaultValue) const
+	QVariant Settings::get(const QString & key, QVariant defaultValue) const
 	{
-		return QSettings::value(name, defaultValue);
+		return QSettings::value(key, defaultValue);
 	}
 
 	//!
 	//! Set a setting value
 	//!
-	void Settings::set(const QString & name, QVariant value)
+	void Settings::set(const QString & key, QVariant value, bool sync)
 	{
-		QVariant oldValue = this->value(name);
+		QVariant oldValue = this->value(key);
 		if (oldValue != value)
 		{
-			QSettings::setValue(name, value);
-			this->sync();
-			emit settingChanged(name, oldValue, value);
+			QSettings::setValue(key, value);
+			if (sync == true)
+			{
+				this->sync();
+			}
+			emit settingChanged(key, oldValue, value);
 		}
 	}
 
@@ -65,16 +70,35 @@ QT_UTILS_NAMESPACE_BEGIN
 	//! Init a setting. This will set it if it doesn't already exist only.
 	//! @returns true if the setting was set, false if it already existed.
 	//!
-	bool Settings::init(const QString & name, QVariant value)
+	bool Settings::init(const QString & key, QVariant value, bool sync)
 	{
-		if (this->contains(name) == false)
+		if (this->contains(key) == false)
 		{
-			QSettings::setValue(name, value);
-			this->sync();
-			emit settingChanged(name, QVariant(), value);
+			QSettings::setValue(key, value);
+			if (sync == true)
+			{
+				this->sync();
+			}
+			emit settingChanged(key, QVariant(), value);
 			return true;
 		}
 		return false;
+	}
+
+	//!
+	//! Returns whether the settings contain the given @p key
+	//!
+	bool Settings::contains(const QString & key) const
+	{
+		return QSettings::contains(key);
+	}
+
+	//!
+	//! Sync the settings.
+	//!
+	void Settings::sync(void)
+	{
+		QSettings::sync();
 	}
 
 	//!
@@ -135,6 +159,12 @@ QT_UTILS_NAMESPACE_BEGIN
 			case Type::Float32:		return Read(device, 0.0f);
 			case Type::Float64:		return Read(device, 0.0);
 			case Type::String:		return Read(device, QString(""));
+			case Type::Point:		return Read(device, QPoint{});
+			case Type::PointF:		return Read(device, QPointF{});
+			case Type::Size:		return Read(device, QSize{});
+			case Type::SizeF:		return Read(device, QSizeF{});
+			case Type::Rect:		return Read(device, QRect{});
+			case Type::RectF:		return Read(device, QRectF{});
 			default:				return QVariant();
 		}
 	}

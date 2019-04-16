@@ -4,6 +4,7 @@
 #include "./Setup.h"
 
 #include <QIODevice>
+#include <QRect>
 #include <QSettings>
 #include <QString>
 #include <QVariant>
@@ -43,14 +44,18 @@ QT_UTILS_NAMESPACE_BEGIN
 		Settings(const QString & path);
 
 		// C++ API
-		template< typename T > static inline T		Get(const QString & name, T defaultValue = T());
-		template< typename T > static inline void	Set(const QString & name, T value);
-		template< typename T > static inline bool	Init(const QString & name, T value);
+		template< typename T > static inline T		Get(const QString & key, T defaultValue = T());
+		template< typename T > static inline void	Set(const QString & key, T value, bool sync = true);
+		template< typename T > static inline bool	Init(const QString & key, T value, bool sync = true);
+		static inline void							Sync(void);
+		static inline bool							Contains(const QString & key);
 
 		// QML API
-		Q_INVOKABLE QVariant	get(const QString & name, QVariant defaultValue = QVariant()) const;
-		Q_INVOKABLE void		set(const QString & name, QVariant value);
-		Q_INVOKABLE bool		init(const QString & name, QVariant value);
+		Q_INVOKABLE QVariant	get(const QString & key, QVariant defaultValue = QVariant()) const;
+		Q_INVOKABLE void		set(const QString & key, QVariant value, bool sync = true);
+		Q_INVOKABLE bool		init(const QString & key, QVariant value, bool sync = true);
+		Q_INVOKABLE bool		contains(const QString & key) const;
+		Q_INVOKABLE void		sync(void);
 
 	private:
 
@@ -64,6 +69,12 @@ QT_UTILS_NAMESPACE_BEGIN
 			Float32,
 			Float64,
 			String,
+			Point,
+			PointF,
+			Size,
+			SizeF,
+			Rect,
+			RectF,
 			Invalid,
 		};
 
@@ -93,10 +104,10 @@ QT_UTILS_NAMESPACE_BEGIN
 	//! Get a setting
 	//!
 	template< typename T >
-	inline T Settings::Get(const QString & name, T defaultValue)
+	inline T Settings::Get(const QString & key, T defaultValue)
 	{
 		return Instance != nullptr ?
-			Instance->get(name, defaultValue).value< T >() :
+			Instance->get(key, defaultValue).value< T >() :
 			T();
 	}
 
@@ -104,11 +115,11 @@ QT_UTILS_NAMESPACE_BEGIN
 	//! Update or set a setting
 	//!
 	template< typename T >
-	inline void Settings::Set(const QString & name, T value)
+	inline void Settings::Set(const QString & key, T value, bool sync)
 	{
 		if (Instance != nullptr)
 		{
-			Instance->set(name, value);
+			Instance->set(key, value, sync);
 		}
 	}
 
@@ -117,9 +128,28 @@ QT_UTILS_NAMESPACE_BEGIN
 	//! @returns true if the setting was set, false if it already existed.
 	//!
 	template< typename T >
-	inline bool Settings::Init(const QString & name, T value)
+	inline bool Settings::Init(const QString & key, T value, bool sync)
 	{
-		return Instance != nullptr ? Instance->init(name, value) : false;
+		return Instance != nullptr && Instance->init(key, value, sync);
+	}
+
+	//!
+	//! Returns true if we have a value for the given key
+	//
+	inline bool Settings::Contains(const QString & key)
+	{
+		return Instance != nullptr && Instance->contains(key);
+	}
+
+	//!
+	//! Synchronize the settings
+	//
+	inline void Settings::Sync(void)
+	{
+		if (Instance != nullptr)
+		{
+			Instance->sync();
+		}
 	}
 
 	//!
@@ -210,6 +240,36 @@ QT_UTILS_NAMESPACE_BEGIN
 
 			case QMetaType::QString:
 				return Write(device, Type::String) && Write(device, value.toString());
+
+			case QMetaType::QPoint: {
+				const QPoint point(value.toPoint());
+				return Write(device, Type::Point) && Write(device, point.x()) && Write(device, point.y());
+			}
+
+			case QMetaType::QPointF: {
+				const QPointF point(value.toPointF());
+				return Write(device, Type::PointF) && Write(device, point.x()) && Write(device, point.y());
+			}
+
+			case QMetaType::QSize: {
+				const QSize size(value.toSize());
+				return Write(device, Type::Size) && Write(device, size.width()) && Write(device, size.height());
+			}
+
+			case QMetaType::QSizeF: {
+				const QSizeF size(value.toSizeF());
+				return Write(device, Type::SizeF) && Write(device, size.width()) && Write(device, size.height());
+			}
+
+			case QMetaType::QRect: {
+				const QRect rect(value.toRect());
+				return Write(device, Type::Rect) && Write(device, rect.left()) && Write(device, rect.right()) && Write(device, rect.width()) && Write(device, rect.height());
+			}
+
+			case QMetaType::QRectF: {
+				const QRectF rect(value.toRectF());
+				return Write(device, Type::RectF) && Write(device, rect.left()) && Write(device, rect.right()) && Write(device, rect.width()) && Write(device, rect.height());
+			}
 
 			default:
 				return false;
