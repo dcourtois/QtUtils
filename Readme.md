@@ -31,3 +31,19 @@ used in QML. Using Qt.labs Settings in QML can partially solve the problem, but:
 This class simply adds the missing features and can be shared with a QML context. It's a singleton-like
 class (yes I know) You just declare 1 instance somewhere, you can share this instance to QML, and you
 can then update settings from everywhere and keep track of what's going on.
+
+QuickView
+---------
+
+Depends on Settings.
+
+This is meant as a drop-in replacement of QQuickView. It support the following things:
+
+* It will store and restore its internal states upon restarting (position, size, etc.)
+* It will correctly maintain the size when the view is maximized so that when you reload
+your app and un-maximize, the window doesn't stay in a "kind-of-maximized-but-not-really"
+state like some well-known apps (Spotify, Deezer, just to name a few ... see it's not so hard ...)
+* It supports fullscreen toggling. It's done by just resizing the view and remove the borders,
+so that there's no context switch.
+* It exposes itself to the internal engine's root context as the global QML property "rootView"
+so that you can toggle fullscreen and be notified from your QML application.
