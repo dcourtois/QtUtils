@@ -47,3 +47,12 @@ state like some well-known apps (Spotify, Deezer, just to name a few ... see it'
 so that there's no context switch.
 * It exposes itself to the internal engine's root context as the global QML property "rootView"
 so that you can toggle fullscreen and be notified from your QML application.
+
+Utils
+-----
+
+This header-only file contains small generic helpers:
+
+* arithmetics operators for QPoint(F)
+* component-wise qMin, qMax and qBound for QPoint(F)
+* conversion between QPoint(F) and QSize(F)
