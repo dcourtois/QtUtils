@@ -33,13 +33,19 @@ QT_UTILS_NAMESPACE_BEGIN
 
 		Q_OBJECT
 
-		Q_PROPERTY(bool fullscreen READ IsFullScreen WRITE SetFullScreen NOTIFY fullscreenChanged)
-		Q_PROPERTY(bool restoreState READ GetRestoreState WRITE SetRestoreState NOTIFY restoreStateChanged)
+		Q_PROPERTY(bool fullscreen			READ IsFullScreen			WRITE SetFullScreen			NOTIFY fullscreenChanged)
+		Q_PROPERTY(bool restorePosition		READ GetRestorePosition		WRITE SetRestorePosition	NOTIFY restorePositionChanged)
+		Q_PROPERTY(bool restoreSize			READ GetRestoreSize			WRITE SetRestoreSize		NOTIFY restoreSizeChanged)
+		Q_PROPERTY(bool restoreMaximized	READ GetRestoreMaximized	WRITE SetRestoreMaximized	NOTIFY restoreMaximizedChanged)
+		Q_PROPERTY(bool restoreFullscreen	READ GetRestoreFullScreen	WRITE SetRestoreFullScreen	NOTIFY restoreFullscreenChanged)
 
 	signals:
 
 		void fullscreenChanged(bool fullscreen);
-		void restoreStateChanged(bool restoreState);
+		void restorePositionChanged(bool restorePosition);
+		void restoreSizeChanged(bool restoreSize);
+		void restoreMaximizedChanged(bool restoreMaximized);
+		void restoreFullscreenChanged(bool restoreFullscreen);
 
 	public:
 
@@ -50,8 +56,14 @@ QT_UTILS_NAMESPACE_BEGIN
 		// C++ API
 		inline bool		IsFullScreen(void) const;
 		void			SetFullScreen(bool value);
-		inline bool		GetRestoreState(void) const;
-		void			SetRestoreState(bool value);
+		inline bool		GetRestorePosition(void) const;
+		void			SetRestorePosition(bool value);
+		inline bool		GetRestoreSize(void) const;
+		void			SetRestoreSize(bool value);
+		inline bool		GetRestoreMaximized(void) const;
+		void			SetRestoreMaximized(bool value);
+		inline bool		GetRestoreFullScreen(void) const;
+		void			SetRestoreFullScreen(bool value);
 
 	private:
 
@@ -59,20 +71,29 @@ QT_UTILS_NAMESPACE_BEGIN
 		void	SaveSettings(void);
 		void	RestoreSettings(void);
 
+		//! true if the view should backup / restore position
+		bool m_RestorePosition;
+
+		//! true if the view should backup / restore size
+		bool m_RestoreSize;
+
+		//! true if the view should backup / restore maximized state
+		bool m_RestoreMaximized;
+
+		//! true if the view should backup / restore fullscreen state
+		bool m_RestoreFullScreen;
+
+		//! maximized state
+		bool m_Maximized;
+
 		//! true if we're in fullscreen
 		bool m_FullScreen;
-
-		//! true if the view is backuping / restoring its states
-		bool m_RestoreState;
 
 		//! current position & size
 		QRect m_Current;
 
 		//! previous position & size
 		QRect m_Previous;
-
-		//! maximized state
-		bool m_Maximized;
 
 		//! flags
 		Qt::WindowFlags m_Flags;
@@ -94,11 +115,35 @@ QT_UTILS_NAMESPACE_BEGIN
 	}
 
 	//!
-	//! Get the current restore state.
+	//! Get the current restore state for position.
 	//!
-	inline bool QuickView::GetRestoreState(void) const
+	inline bool QuickView::GetRestorePosition(void) const
 	{
-		return m_RestoreState;
+		return m_RestorePosition;
+	}
+
+	//!
+	//! Get the current restore state for size.
+	//!
+	inline bool QuickView::GetRestoreSize(void) const
+	{
+		return m_RestoreSize;
+	}
+
+	//!
+	//! Get the current restore state for maximized.
+	//!
+	inline bool QuickView::GetRestoreMaximized(void) const
+	{
+		return m_RestoreMaximized;
+	}
+
+	//!
+	//! Get the current restore state for fullscreen.
+	//!
+	inline bool QuickView::GetRestoreFullScreen(void) const
+	{
+		return m_RestoreFullScreen;
 	}
 
 QT_UTILS_NAMESPACE_END

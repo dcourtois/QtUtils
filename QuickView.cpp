@@ -1,5 +1,6 @@
 #include "./QuickView.h"
 #include "./Settings.h"
+#include "./Utils.h"
 
 #include <QQmlContext>
 #include <QQmlEngine>
@@ -15,9 +16,12 @@ QT_UTILS_NAMESPACE_BEGIN
 	//! Constructor
 	//!
 	QuickView::QuickView(void)
-		: m_FullScreen(false)
-		, m_RestoreState(true)
+		: m_RestorePosition(true)
+		, m_RestoreSize(true)
+		, m_RestoreMaximized(true)
+		, m_RestoreFullScreen(true)
 		, m_Maximized(false)
+		, m_FullScreen(false)
 		, m_Flags(0)
 	{
 		// init update state stack
@@ -124,14 +128,54 @@ QT_UTILS_NAMESPACE_BEGIN
 	}
 
 	//!
-	//! Set the restore state
+	//! Set the restore state for position
 	//!
-	void QuickView::SetRestoreState(bool value)
+	void QuickView::SetRestorePosition(bool value)
 	{
-		if (m_RestoreState != value)
+		if (m_RestorePosition != value)
 		{
-			m_RestoreState = value;
-			emit restoreStateChanged(m_RestoreState);
+			m_RestorePosition = value;
+			Settings::Set("RootView.RestorePosition", m_RestorePosition);
+			emit restorePositionChanged(m_RestorePosition);
+		}
+	}
+
+	//!
+	//! Set the restore state for size
+	//!
+	void QuickView::SetRestoreSize(bool value)
+	{
+		if (m_RestoreSize != value)
+		{
+			m_RestoreSize = value;
+			Settings::Set("RootView.RestoreSize", m_RestoreSize);
+			emit restoreSizeChanged(m_RestoreSize);
+		}
+	}
+
+	//!
+	//! Set the restore state for maximized
+	//!
+	void QuickView::SetRestoreMaximized(bool value)
+	{
+		if (m_RestoreMaximized != value)
+		{
+			m_RestoreMaximized = value;
+			Settings::Set("RootView.RestoreMaximized", m_RestoreMaximized);
+			emit restoreMaximizedChanged(m_RestoreMaximized);
+		}
+	}
+
+	//!
+	//! Set the restore state for fullscreen
+	//!
+	void QuickView::SetRestoreFullScreen(bool value)
+	{
+		if (m_RestoreFullScreen != value)
+		{
+			m_RestoreFullScreen = value;
+			Settings::Set("RootView.RestoreFullScreen", m_RestoreFullScreen);
+			emit restoreFullscreenChanged(m_RestoreFullScreen);
 		}
 	}
 
@@ -156,27 +200,45 @@ QT_UTILS_NAMESPACE_BEGIN
 		// disable state update
 		m_UpdateState.push(false);
 
-		// read the settings and clamp to fit the window in the current screen
-		QRect geom = this->screen()->availableGeometry();
-		QPoint pos = Settings::Get("RootView.Position", this->position());
-		QSize size = Settings::Get("RootView.Size", this->size());
-		m_Current.setX(qBound(geom.left(), pos.x(), geom.right() - size.width()));
-		m_Current.setY(qBound(geom.top(), pos.y(), geom.bottom() - size.height()));
-		m_Current.setSize(size);
-		m_Maximized = Settings::Get("RootView.Maximized", this->visibility() == QWindow::Maximized);
-		m_FullScreen = Settings::Get("RootView.FullScreen", m_FullScreen);
-		m_Previous = m_Current;
+		// read the settings
+		const QPoint pos = Settings::Get("RootView.Position", this->position());
+		const QSize size = Settings::Get("RootView.Size", this->size());
 
-		// initialize the window, only if needed
-		if (m_RestoreState == true && Settings::Contains("RootView.Init") == true)
+		// initialize internal states
+		// note : clamp position to the current screen
+		const QRect geom	= this->screen()->availableGeometry();
+		m_Current			= { qBound(geom.topLeft(), pos, toPoint(geom.size() - size)), size };
+		m_Maximized			= Settings::Get("RootView.Maximized", this->visibility() == QWindow::Maximized);
+		m_FullScreen		= Settings::Get("RootView.FullScreen", m_FullScreen);
+		m_RestorePosition	= Settings::Get("RootView.RestorePosition", m_RestorePosition);
+		m_RestoreSize		= Settings::Get("RootView.RestoreSize", m_RestoreSize);
+		m_RestoreMaximized	= Settings::Get("RootView.RestoreMaximized", m_RestoreMaximized);
+		m_RestoreFullScreen	= Settings::Get("RootView.RestoreFullScreen", m_RestoreFullScreen);
+		m_Previous			= m_Current;
+
+		// restore states as needed
+		if (Settings::Contains("RootView.Init") == true)
 		{
-			this->setPosition(m_Current.topLeft());
-			this->resize(m_Current.size());
-			this->setVisibility(m_Maximized == true ? QWindow::Maximized : QWindow::Windowed);
-			if (m_FullScreen == true)
+			if (m_RestorePosition == true)
+			{
+				this->setPosition(m_Current.topLeft());
+			}
+			if (m_RestoreSize == true)
+			{
+				this->resize(m_Current.size());
+			}
+			if (m_RestoreMaximized == true)
+			{
+				this->setVisibility(m_Maximized == true ? QWindow::Maximized : QWindow::Windowed);
+			}
+			if (m_RestoreFullScreen == true && m_FullScreen == true)
 			{
 				m_FullScreen = false;
 				this->SetFullScreen(true);
+			}
+			else
+			{
+				m_FullScreen = false;
 			}
 		}
 		else
