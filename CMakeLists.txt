@@ -12,6 +12,16 @@ set (CMAKE_AUTOMOC_MOC_OPTIONS "")
 set (CMAKE_AUTORCC OFF)
 
 #
+# Get the required Qt libraries
+#
+find_package (Qt5 5.12
+	COMPONENTS
+		Quick
+		Widgets
+	REQUIRED
+)
+
+#
 # The library
 #
 add_library (QtUtils

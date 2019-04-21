@@ -70,4 +70,77 @@ QT_UTILS_NAMESPACE_BEGIN
 
 QT_UTILS_NAMESPACE_END
 
+
+//!
+//! @def QT_UTILS_VECTOR_WRAPPER_IMPL(className, typeName, propertyName, memberName)
+//!
+//! This macro is used to generate the code needed to use a QVector of
+//! values through a QQmlListProperty property in QML. Here is an example use:
+//!
+//! ```
+//! class SomeClass
+//! {
+//!
+//! 	Q_OBJECT
+//! 	Q_PROPERTY(QQmlListProperty< int > intList READ intList NOTIFY intListChanged)
+//!
+//! signals:
+//!
+//! 	// this is the signal used to notify list changes
+//! 	void intListChanged(QQmlListProperty< int > intList);
+//!
+//! public:
+//!
+//! 	// generate the implementation
+//! 	QT_UTILS_VECTOR_WRAPPER_IMPL(SomeClass, int, intList, m_IntList)
+//!
+//! private:
+//!
+//! 	//! the internal list
+//! 	QVector< int > m_IntList;
+//!
+//! };
+//! ```
+//!
+#define QT_UTILS_VECTOR_WRAPPER_IMPL(className, typeName, propertyName, memberName)						\
+	inline QQmlListProperty< typeName > propertyName(void)												\
+	{																									\
+		return QQmlListProperty< typeName >(															\
+			this,																						\
+			nullptr,																					\
+			&className::propertyName##Append,															\
+			&className::propertyName##Count,															\
+			&className::propertyName##Get,																\
+			&className::propertyName##Clear																\
+		);																								\
+	}																									\
+	inline static void propertyName##Append(QQmlListProperty< typeName > * list, typeName * item)		\
+	{																									\
+		className * instance = static_cast< className * >(list->object);								\
+		Q_ASSERT(instance != nullptr);																	\
+		instance->memberName.push_back(item);															\
+		instance->propertyName##Changed();																\
+	}																									\
+	inline static int propertyName##Count(QQmlListProperty< typeName > * list)							\
+	{																									\
+		className * instance = static_cast< className * >(list->object);								\
+		Q_ASSERT(instance != nullptr);																	\
+		return instance->memberName.size();																\
+	}																									\
+	inline static typeName * propertyName##Get(QQmlListProperty< typeName > * list, int index)			\
+	{																									\
+		className * instance = static_cast< className * >(list->object);								\
+		Q_ASSERT(instance != nullptr);																	\
+		Q_ASSERT(index >= 0 && index < instance->memberName.size());									\
+		return instance->memberName.at(index);															\
+	}																									\
+	inline static void propertyName##Clear(QQmlListProperty< typeName > * list)							\
+	{																									\
+		className * instance = static_cast< className * >(list->object);								\
+		Q_ASSERT(instance != nullptr);																	\
+		instance->memberName.clear();																	\
+		instance->propertyName##Changed();																\
+	}																									\
+
+
 #endif
