@@ -22,6 +22,7 @@ QT_UTILS_NAMESPACE_BEGIN
 		, m_RestoreFullScreen(true)
 		, m_Maximized(false)
 		, m_FullScreen(false)
+		, m_Loading(true)
 		, m_Flags(0)
 	{
 		// init update state stack
@@ -35,6 +36,7 @@ QT_UTILS_NAMESPACE_BEGIN
 			if (status == QQuickView::Status::Ready)
 			{
 				this->RestoreSettings();
+				m_Loading = false;
 			}
 		});
 
@@ -184,6 +186,10 @@ QT_UTILS_NAMESPACE_BEGIN
 	//!
 	void QuickView::SaveSettings(void)
 	{
+		if (m_Loading == true)
+		{
+			return;
+		}
 		Settings::Set("RootView.Position", m_Current.topLeft(), false);
 		Settings::Set("RootView.Size", m_Current.size(), false);
 		Settings::Set("RootView.Maximized", m_Maximized, false);

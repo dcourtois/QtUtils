@@ -89,6 +89,9 @@ QT_UTILS_NAMESPACE_BEGIN
 		//! true if we're in fullscreen
 		bool m_FullScreen;
 
+		//! true when the view is loading
+		bool m_Loading;
+
 		//! current position & size
 		QRect m_Current;
 
