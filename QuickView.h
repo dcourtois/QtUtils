@@ -55,7 +55,7 @@ QT_UTILS_NAMESPACE_BEGIN
 
 		// C++ API
 		inline bool		IsFullScreen(void) const;
-		void			SetFullScreen(bool value);
+		void			SetFullScreen(bool value, bool force = false);
 		inline bool		GetRestorePosition(void) const;
 		void			SetRestorePosition(bool value);
 		inline bool		GetRestoreSize(void) const;
@@ -88,9 +88,6 @@ QT_UTILS_NAMESPACE_BEGIN
 
 		//! true if we're in fullscreen
 		bool m_FullScreen;
-
-		//! true when the view is loading
-		bool m_Loading;
 
 		//! current position & size
 		QRect m_Current;

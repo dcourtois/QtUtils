@@ -22,11 +22,10 @@ QT_UTILS_NAMESPACE_BEGIN
 		, m_RestoreFullScreen(true)
 		, m_Maximized(false)
 		, m_FullScreen(false)
-		, m_Loading(true)
 		, m_Flags(0)
 	{
 		// init update state stack
-		m_UpdateState.push(true);
+		m_UpdateState.push(false);
 
 		// make the view control the root object size
 		this->setResizeMode(QQuickView::ResizeMode::SizeRootObjectToView);
@@ -36,7 +35,7 @@ QT_UTILS_NAMESPACE_BEGIN
 			if (status == QQuickView::Status::Ready)
 			{
 				this->RestoreSettings();
-				m_Loading = false;
+				m_UpdateState.push(true);
 			}
 		});
 
@@ -103,29 +102,43 @@ QT_UTILS_NAMESPACE_BEGIN
 	//!
 	//! Set the fullscreen state
 	//!
-	void QuickView::SetFullScreen(bool value)
+	void QuickView::SetFullScreen(bool value, bool force)
 	{
-		if (m_FullScreen != value)
+		if (m_UpdateState.top() == false && force == false)
 		{
-			m_FullScreen = value;
-			m_UpdateState.push(false);
-			if (m_FullScreen == true)
+			// not yet ready, this is probably called from QML
+			Settings::Set("RootView.ForceFullScreen", value == true ? 2 : 1);
+			return;
+		}
+		else
+		{
+			if (m_FullScreen != value || force == true)
 			{
-				m_Flags = this->flags();
-				this->setFlags(Qt::Window | Qt::FramelessWindowHint);
-				this->setPosition({ 0, 0 });
-				this->resize(this->screen()->geometry().size());
+				m_FullScreen = value;
+				m_UpdateState.push(false);
+				if (m_FullScreen == true)
+				{
+					m_Flags = this->flags();
+					this->setFlags(Qt::Window | Qt::FramelessWindowHint);
+					this->setPosition({ 0, 0 });
+					this->resize(this->screen()->geometry().size());
+				}
+				else
+				{
+					this->setFlags(m_Flags);
+					this->setPosition(m_Current.topLeft());
+					this->resize(m_Current.size());
+					this->setVisibility(m_Maximized == true ? QWindow::Maximized : QWindow::Windowed);
+				}
+				m_UpdateState.pop();
+
+				if (m_UpdateState.top() == true)
+				{
+					Settings::Set("RootView.FullScreen", m_FullScreen);
+				}
+
+				emit fullscreenChanged(m_FullScreen);
 			}
-			else
-			{
-				this->setFlags(m_Flags);
-				this->setPosition(m_Current.topLeft());
-				this->resize(m_Current.size());
-				this->setVisibility(m_Maximized == true ? QWindow::Maximized : QWindow::Windowed);
-			}
-			m_UpdateState.pop();
-			this->SaveSettings();
-			emit fullscreenChanged(m_FullScreen);
 		}
 	}
 
@@ -186,16 +199,12 @@ QT_UTILS_NAMESPACE_BEGIN
 	//!
 	void QuickView::SaveSettings(void)
 	{
-		if (m_Loading == true)
-		{
-			return;
-		}
 		Settings::Set("RootView.Position", m_Current.topLeft(), false);
 		Settings::Set("RootView.Size", m_Current.size(), false);
 		Settings::Set("RootView.Maximized", m_Maximized, false);
 		Settings::Set("RootView.FullScreen", m_FullScreen, false);
 		Settings::Set("RootView.Init", true, false);
-		m_SettingsTimer.start(200);
+		m_SettingsTimer.start(1000);
 	}
 
 	//!
@@ -203,8 +212,8 @@ QT_UTILS_NAMESPACE_BEGIN
 	//!
 	void QuickView::RestoreSettings(void)
 	{
-		// disable state update
-		m_UpdateState.push(false);
+		// make sure state updates are disabled
+		Q_ASSERT(m_UpdateState.top() == false);
 
 		// read the settings
 		const QPoint pos = Settings::Get("RootView.Position", this->position());
@@ -222,42 +231,45 @@ QT_UTILS_NAMESPACE_BEGIN
 		m_RestoreFullScreen	= Settings::Get("RootView.RestoreFullScreen", m_RestoreFullScreen);
 		m_Previous			= m_Current;
 
+		// check if the full screen state has been overriden from QML
+		int forceFullScreen	= Settings::Get("RootView.ForceFullScreen", 0);
+		Settings::Set("RootView.ForceFullScreen", 0);
+
 		// restore states as needed
 		if (Settings::Contains("RootView.Init") == true)
 		{
-			if (m_RestorePosition == true)
+			if (m_RestorePosition == true && m_FullScreen == false)
 			{
 				this->setPosition(m_Current.topLeft());
 			}
-			if (m_RestoreSize == true)
+			if (m_RestoreSize == true && m_FullScreen == false)
 			{
 				this->resize(m_Current.size());
 			}
-			if (m_RestoreMaximized == true)
+			if (m_RestoreMaximized == true && m_FullScreen == false && forceFullScreen != 2)
 			{
 				this->setVisibility(m_Maximized == true ? QWindow::Maximized : QWindow::Windowed);
 			}
-			if (m_RestoreFullScreen == true && m_FullScreen == true)
+			if (forceFullScreen != 0)
 			{
-				m_FullScreen = false;
-				this->SetFullScreen(true);
+				m_FullScreen = forceFullScreen == 2 ? true : false;
 			}
-			else
+			if (m_RestoreFullScreen == true || forceFullScreen == 2)
 			{
-				m_FullScreen = false;
+				this->SetFullScreen(true, true);
 			}
 		}
 		else
 		{
-			// still need to show the view
-			this->show();
+			this->setVisibility(m_Maximized == true ? QWindow::Maximized : QWindow::Windowed);
 
-			// and don't forget to override the internal states
 			m_Current = m_Previous = this->geometry();
-		}
 
-		// restore state update
-		m_UpdateState.pop();
+			if (forceFullScreen == 2)
+			{
+				this->SetFullScreen(true, true);
+			}
+		}
 	}
 
 QT_UTILS_NAMESPACE_END
