@@ -155,7 +155,7 @@ QT_UTILS_NAMESPACE_BEGIN
 		{
 			case Type::Bool:		return Read(device, static_cast< char >(0)) != 0;
 			case Type::Int32:		return Read(device, static_cast< int >(0));
-			case Type::Int64:		return Read(device, static_cast< int64_t >(0));
+			case Type::Int64:		return Read(device, static_cast< long long >(0));
 			case Type::Float32:		return Read(device, 0.0f);
 			case Type::Float64:		return Read(device, 0.0);
 			case Type::String:		return Read(device, QString(""));

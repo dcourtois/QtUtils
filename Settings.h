@@ -82,15 +82,12 @@ QT_UTILS_NAMESPACE_BEGIN
 		Settings(const QString & path, QSettings::Format format);
 
 		// private API
-		static QSettings::Format				RegisterFormat(void);
-		static bool								Read(QIODevice & device, QSettings::SettingsMap & map);
-		static QVariant							Read(QIODevice & device);
-		template< typename T >	static T		Read(QIODevice & device, T defaultValue);
-		template< >				static QString	Read(QIODevice & device, QString defaultValue);
-		static bool								Write(QIODevice & device, const QSettings::SettingsMap & map);
-		template< typename T > static bool		Write(QIODevice & device, T value);
-		template< > static bool					Write(QIODevice & device, QString value);
-		template< > static bool					Write(QIODevice & device, QVariant value);
+		static QSettings::Format					RegisterFormat(void);
+		static bool									Read(QIODevice & device, QSettings::SettingsMap & map);
+		static QVariant								Read(QIODevice & device);
+		template< typename T > static inline T		Read(QIODevice & device, T defaultValue);
+		static bool									Write(QIODevice & device, const QSettings::SettingsMap & map);
+		template< typename T > static inline bool	Write(QIODevice & device, T value);
 
 		//! The single instance of the settings
 		static Settings * Instance;
@@ -107,7 +104,7 @@ QT_UTILS_NAMESPACE_BEGIN
 	inline T Settings::Get(const QString & key, T defaultValue)
 	{
 		return Instance != nullptr ?
-			Instance->get(key, defaultValue).value< T >() :
+			Instance->get(key, defaultValue).template value< T >() :
 			T();
 	}
 
@@ -156,7 +153,7 @@ QT_UTILS_NAMESPACE_BEGIN
 	//! Safely read a type
 	//!
 	template< typename T >
-	T Settings::Read(QIODevice & device, T defaultValue)
+	inline T Settings::Read(QIODevice & device, T defaultValue)
 	{
 		T value = T();
 		if (device.read(reinterpret_cast< char * >(&value), sizeof(T)) != sizeof(T))
@@ -170,14 +167,14 @@ QT_UTILS_NAMESPACE_BEGIN
 	//! Specialization for strings
 	//!
 	template< >
-	QString Settings::Read(QIODevice & device, QString defaultValue)
+	inline QString Settings::Read(QIODevice & device, QString defaultValue)
 	{
 		int length = Read(device, static_cast< int >(-1));
 		if (length > 0)
 		{
 			std::string string;
 			string.resize(length, '\0');
-			if (device.read(string.data(), length) != length)
+			if (device.read(&string[0], length) != length)
 			{
 				return defaultValue;
 			}
@@ -194,7 +191,7 @@ QT_UTILS_NAMESPACE_BEGIN
 	//! Write a value
 	//!
 	template< typename T >
-	static bool Settings::Write(QIODevice & device, T value)
+	inline bool Settings::Write(QIODevice & device, T value)
 	{
 		return device.write(reinterpret_cast< char * >(&value), sizeof(T)) == sizeof(T);
 	}
@@ -203,7 +200,7 @@ QT_UTILS_NAMESPACE_BEGIN
 	//! Write a QString
 	//!
 	template< >
-	static bool Settings::Write(QIODevice & device, QString value)
+	inline bool Settings::Write(QIODevice & device, QString value)
 	{
 		return Write(device, value.size()) && (value.size() == 0 || device.write(value.toLocal8Bit()) == value.size());
 	}
@@ -212,9 +209,8 @@ QT_UTILS_NAMESPACE_BEGIN
 	//! Write a QVariant
 	//!
 	template< >
-	static bool Settings::Write(QIODevice & device, QVariant value)
+	inline bool Settings::Write(QIODevice & device, QVariant value)
 	{
-		static_assert(sizeof(long) == sizeof(int));
 		static_assert(sizeof(long long) == sizeof(int64_t));
 
 		switch ((QMetaType::Type)value.type())
