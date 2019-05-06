@@ -29,6 +29,7 @@ add_library (QtUtils
 	QuickView.h
 	Settings.cpp
 	Settings.h
+	Utils.h
 )
 
 #
