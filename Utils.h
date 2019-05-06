@@ -5,6 +5,8 @@
 
 #include <QPoint>
 #include <QPointF>
+#include <QSize>
+#include <QSizeF>
 #include <QtGlobal>
 #include <QtMath>
 
@@ -30,10 +32,10 @@ QT_UTILS_NAMESPACE_BEGIN
 	constexpr QPoint operator / (const QPoint & left, const QPoint & right) { return { left.x() / right.x(), left.y() / right.y() }; }
 
 	//! qRound component-wise implementation for qFloor (returns a QPoint)
-	constexpr QPoint qFloor(const QPointF & point) { return { qFloor(point.x()), qFloor(point.y()) }; }
+	inline QPoint qFloor(const QPointF & point) { return { qFloor(point.x()), qFloor(point.y()) }; }
 
 	//! qRound component-wise implementation for qCeil (returns a QPoint)
-	constexpr QPoint qCeil(const QPointF & point) { return { qCeil(point.x()), qCeil(point.y()) }; }
+	inline QPoint qCeil(const QPointF & point) { return { qCeil(point.x()), qCeil(point.y()) }; }
 
 	//! qRound component-wise implementation for QPointF (returns a QPoint)
 	constexpr QPoint qRound(const QPointF & point) { return { qRound(point.x()), qRound(point.y()) }; }
