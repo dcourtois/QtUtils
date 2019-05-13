@@ -114,23 +114,26 @@ QT_UTILS_NAMESPACE_BEGIN
 		{
 			if (m_FullScreen != value || force == true)
 			{
-				m_FullScreen = value;
-				m_UpdateState.push(false);
-				if (m_FullScreen == true)
+				if (m_FullScreen != value)
 				{
-					m_Flags = this->flags();
-					this->setFlags(Qt::Window | Qt::FramelessWindowHint);
-					this->setPosition({ 0, 0 });
-					this->resize(this->screen()->geometry().size());
+					m_FullScreen = value;
+					m_UpdateState.push(false);
+					if (m_FullScreen == true)
+					{
+						m_Flags = this->flags();
+						this->setFlags(Qt::Window | Qt::FramelessWindowHint);
+						this->setPosition({ 0, 0 });
+						this->resize(this->screen()->geometry().size());
+					}
+					else
+					{
+						this->setFlags(m_Flags);
+						this->setPosition(m_Current.topLeft());
+						this->resize(m_Current.size());
+						this->setVisibility(m_Maximized == true ? QWindow::Maximized : QWindow::Windowed);
+					}
+					m_UpdateState.pop();
 				}
-				else
-				{
-					this->setFlags(m_Flags);
-					this->setPosition(m_Current.topLeft());
-					this->resize(m_Current.size());
-					this->setVisibility(m_Maximized == true ? QWindow::Maximized : QWindow::Windowed);
-				}
-				m_UpdateState.pop();
 
 				if (m_UpdateState.top() == true)
 				{
@@ -254,9 +257,9 @@ QT_UTILS_NAMESPACE_BEGIN
 			{
 				m_FullScreen = forceFullScreen == 2 ? true : false;
 			}
-			if (m_RestoreFullScreen == true || forceFullScreen == 2)
+			if (m_RestoreFullScreen == true || forceFullScreen != 0)
 			{
-				this->SetFullScreen(true, true);
+				this->SetFullScreen(m_FullScreen, true);
 			}
 		}
 		else
