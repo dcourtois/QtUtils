@@ -25,6 +25,8 @@ find_package (Qt5 5.12
 # The library
 #
 add_library (QtUtils
+	File.cpp
+	File.h
 	QuickView.cpp
 	QuickView.h
 	Settings.cpp
