@@ -117,7 +117,7 @@ if (${QT_UTILS_GENERATE_DOCUMENTATION})
 			DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/Doxygen.cfg
 			COMMENT "Generating documentation..."
 			COMMAND doxygen ${CMAKE_CURRENT_BINARY_DIR}/Doxygen.cfg
-			COMMAND moxygen --anchors --output ${CMAKE_CURRENT_SOURCE_DIR}/API.md ${CMAKE_CURRENT_BINARY_DIR}/doc/xml
+			COMMAND moxygen --output ${CMAKE_CURRENT_SOURCE_DIR}/API.md ${CMAKE_CURRENT_BINARY_DIR}/doc/xml
 		)
 
 		# make it depend on QtUtils so that the doc is built last
