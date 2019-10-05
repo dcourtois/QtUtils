@@ -19,7 +19,7 @@ set (CMAKE_AUTORCC OFF)
 #
 # Get the required Qt libraries
 #
-find_package (Qt5 5.12
+find_package (Qt5 5
 	COMPONENTS
 		Quick
 		Widgets
