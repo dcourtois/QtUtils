@@ -84,9 +84,6 @@ QT_UTILS_NAMESPACE_BEGIN
 		// configure the settings timer
 		m_SettingsTimer.setSingleShot(true);
 		m_SettingsTimer.callOnTimeout(Settings::Sync);
-
-		// expose ourselves to QML
-		this->engine()->rootContext()->setContextProperty("rootView", this);
 	}
 
 	//!
