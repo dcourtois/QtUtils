@@ -72,10 +72,15 @@ QT_UTILS_NAMESPACE_BEGIN
 				this->SaveSettings();
 			}
 		});
-		QObject::connect(this, &QWindow::visibilityChanged, [&] (QWindow::Visibility value) {
-			if (m_UpdateState.top() == true && m_FullScreen == false && value != QWindow::Hidden)
+
+		// note: I don't use visibilityChanged to detect maximized/windowed state changes because
+		// this signal is not fired reliably depending on if the window has been raised yet or not.
+		// (e.g. if you set the visibility to maximized, and then raise the window, you'll receive
+		// position and size changes, but I have no way of knowing it's the result of maximization)
+		QObject::connect(this, &QWindow::windowStateChanged, [&] (Qt::WindowState state) {
+			if (m_UpdateState.top() == true && m_FullScreen == false && state != Qt::WindowState::WindowMinimized)
 			{
-				m_Maximized = value == QWindow::Maximized;
+				m_Maximized = state == Qt::WindowState::WindowMaximized;
 				m_Current = m_Maximized == true || m_FullScreen == true ? m_Previous : m_Current;
 				this->SaveSettings();
 			}
@@ -203,7 +208,7 @@ QT_UTILS_NAMESPACE_BEGIN
 		Settings::Set("RootView.Size", m_Current.size(), false);
 		Settings::Set("RootView.Maximized", m_Maximized, false);
 		Settings::Set("RootView.FullScreen", m_FullScreen, false);
-		Settings::Set("RootView.Init", true, false);
+		Settings::Set("RootView.Version", 1, false);
 		m_SettingsTimer.start(1000);
 	}
 
@@ -214,6 +219,13 @@ QT_UTILS_NAMESPACE_BEGIN
 	{
 		// make sure state updates are disabled
 		Q_ASSERT(m_UpdateState.top() == false);
+
+		// check version and update format if necessary
+		const int version = Settings::Get("RootView.Version", -1);
+		if (version == -1)
+		{
+			Settings::Clear();
+		}
 
 		// read the settings
 		const QPoint pos = Settings::Get("RootView.Position", this->position());
@@ -236,7 +248,7 @@ QT_UTILS_NAMESPACE_BEGIN
 		Settings::Set("RootView.ForceFullScreen", 0);
 
 		// restore states as needed
-		if (Settings::Contains("RootView.Init") == true)
+		if (version != -1)
 		{
 			if (m_RestorePosition == true && m_FullScreen == false)
 			{
@@ -259,6 +271,8 @@ QT_UTILS_NAMESPACE_BEGIN
 				this->SetFullScreen(m_FullScreen, true);
 			}
 		}
+
+		// first time, show the window and set options that might have been set from QML
 		else
 		{
 			this->setVisibility(m_Maximized == true ? QWindow::Maximized : QWindow::Windowed);
