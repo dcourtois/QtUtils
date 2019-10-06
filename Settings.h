@@ -49,6 +49,7 @@ QT_UTILS_NAMESPACE_BEGIN
 		template< typename T > static inline bool	Init(const QString & key, T value, bool sync = true);
 		static inline void							Sync(void);
 		static inline bool							Contains(const QString & key);
+		static inline void							Clear(void);
 
 		// QML API
 		Q_INVOKABLE QVariant	get(const QString & key, QVariant defaultValue = QVariant()) const;
@@ -136,6 +137,17 @@ QT_UTILS_NAMESPACE_BEGIN
 	inline bool Settings::Contains(const QString & key)
 	{
 		return Instance != nullptr && Instance->contains(key);
+	}
+
+	//!
+	//! Clears the settings
+	//
+	inline void Settings::Clear(void)
+	{
+		if (Instance != nullptr)
+		{
+			Instance->clear();
+		}
 	}
 
 	//!
