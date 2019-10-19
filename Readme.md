@@ -19,6 +19,20 @@ These utilities are meant to be dropped in your projects. Just add the .cpp and 
 to your project files. Note that some utilities depends on one another, in which case the dependency
 is listed in this readme.
 
+Qt5.natvis
+----------
+
+This is usefull if you're using Visual Studio 201X or Visual Studio Code: it adds support for better
+debugger visualization of lots of Qt types.
+
+- Visual Studio Code - in your launch configurations, just add the following line:
+`"visualizerFile": "${workspaceRoot}\\QtUtils\\Qt5.natvis"`
+- Visual Studio 201X - copy the file to `%UserProfile%\Documents\Visual Studio 201X\Visualizers`.
+Note that `Visualizers` might not exist; just create it.
+
+Generated from https://code.qt.io/cgit/qt-labs/vstools.git/tree/src/qtvstools/qt5.natvis.xml @
+6c19f966d47362ec9f51909bae740ff60a7bde99
+
 Settings
 --------
 
