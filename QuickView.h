@@ -10,6 +10,7 @@
 #include <QQuickView>
 #include <QStack>
 #include <QTimer>
+#include <QFlag>
 
 #if (_MSC_VER)
 #	pragma warning ( pop )
@@ -22,8 +23,7 @@ QT_UTILS_NAMESPACE_BEGIN
 	//! Implement a QQuickView and improve provides support for the following:
 	//!
 	//! - Save and restore position/size/maximized states. This works only if a
-	//!   Settings instance has been created, and can also be disabled using the
-	//!   `restoreState` property.
+	//!		Settings instance has been created.
 	//! - Support dynamic switch to fullscreen using the `fullscreen` property.
 	//! - Makes itself available to QML through the global `rootView` property.
 	//!
@@ -33,55 +33,55 @@ QT_UTILS_NAMESPACE_BEGIN
 
 		Q_OBJECT
 
+	public:
+
+		enum class PersistenceFlags
+		{
+			None = 0,
+			FullScreen = 1,
+			Maximized = 1 << 1,
+			Position = 1 << 2,
+			Size = 1 << 3,
+			All = FullScreen | Maximized | Position | Size
+		};
+
+		typedef QFlags< PersistenceFlags > Persistence;
+
+	private:
+
 		Q_PROPERTY(bool fullscreen			READ IsFullScreen			WRITE SetFullScreen			NOTIFY fullscreenChanged)
-		Q_PROPERTY(bool restorePosition		READ GetRestorePosition		WRITE SetRestorePosition	NOTIFY restorePositionChanged)
-		Q_PROPERTY(bool restoreSize			READ GetRestoreSize			WRITE SetRestoreSize		NOTIFY restoreSizeChanged)
-		Q_PROPERTY(bool restoreMaximized	READ GetRestoreMaximized	WRITE SetRestoreMaximized	NOTIFY restoreMaximizedChanged)
-		Q_PROPERTY(bool restoreFullscreen	READ GetRestoreFullScreen	WRITE SetRestoreFullScreen	NOTIFY restoreFullscreenChanged)
+		Q_PROPERTY(Persistence persistence	READ GetPersistence			WRITE SetPersistence		NOTIFY persistenceChanged)
 
 	signals:
 
 		void fullscreenChanged(bool fullscreen);
-		void restorePositionChanged(bool restorePosition);
-		void restoreSizeChanged(bool restoreSize);
-		void restoreMaximizedChanged(bool restoreMaximized);
-		void restoreFullscreenChanged(bool restoreFullscreen);
+		void persistenceChanged(Persistence persistence);
 
 	public:
 
 		// constructor
 		QuickView(void);
-		~QuickView(void);
 
 		// C++ API
-		inline bool		IsFullScreen(void) const;
-		void			SetFullScreen(bool value, bool force = false);
-		inline bool		GetRestorePosition(void) const;
-		void			SetRestorePosition(bool value);
-		inline bool		GetRestoreSize(void) const;
-		void			SetRestoreSize(bool value);
-		inline bool		GetRestoreMaximized(void) const;
-		void			SetRestoreMaximized(bool value);
-		inline bool		GetRestoreFullScreen(void) const;
-		void			SetRestoreFullScreen(bool value);
+		inline bool			IsFullScreen(void) const;
+		inline bool			IsReady(void) const;
+		void				SetFullScreen(bool value, bool force = false);
+		inline Persistence	GetPersistence(void) const;
+		void				SetPersistence(Persistence value);
+		inline bool			GetRestoreSize(void) const;
+
+	protected:
+
+		// reimplemented from QObject
+		bool	eventFilter(QObject * watched, QEvent * event) override;
 
 	private:
 
 		// C++ API
-		void	SaveSettings(void);
 		void	RestoreSettings(void);
 
-		//! true if the view should backup / restore position
-		bool m_RestorePosition;
-
-		//! true if the view should backup / restore size
-		bool m_RestoreSize;
-
-		//! true if the view should backup / restore maximized state
-		bool m_RestoreMaximized;
-
-		//! true if the view should backup / restore fullscreen state
-		bool m_RestoreFullScreen;
+		//! Persitence flags
+		Persistence m_Persistence;
 
 		//! maximized state
 		bool m_Maximized;
@@ -89,20 +89,11 @@ QT_UTILS_NAMESPACE_BEGIN
 		//! true if we're in fullscreen
 		bool m_FullScreen;
 
-		//! current position & size
-		QRect m_Current;
+		//! the windowed geometry
+		QRect m_WindowedGeometry;
 
-		//! previous position & size
-		QRect m_Previous;
-
-		//! flags
+		//! window flags
 		Qt::WindowFlags m_Flags;
-
-		//! Timer used to avoid writing the settings too many times
-		QTimer m_SettingsTimer;
-
-		//! Used to block current states update
-		QStack< bool > m_UpdateState;
 
 	};
 
@@ -115,36 +106,22 @@ QT_UTILS_NAMESPACE_BEGIN
 	}
 
 	//!
-	//! Get the current restore state for position.
+	//! Returns true if the status of the view is ready
 	//!
-	inline bool QuickView::GetRestorePosition(void) const
+	inline bool QuickView::IsReady(void) const
 	{
-		return m_RestorePosition;
+		return this->status() == QQuickView::Status::Ready;
 	}
 
 	//!
-	//! Get the current restore state for size.
+	//! Get the persistence flags.
 	//!
-	inline bool QuickView::GetRestoreSize(void) const
+	inline QuickView::Persistence QuickView::GetPersistence(void) const
 	{
-		return m_RestoreSize;
+		return m_Persistence;
 	}
 
-	//!
-	//! Get the current restore state for maximized.
-	//!
-	inline bool QuickView::GetRestoreMaximized(void) const
-	{
-		return m_RestoreMaximized;
-	}
-
-	//!
-	//! Get the current restore state for fullscreen.
-	//!
-	inline bool QuickView::GetRestoreFullScreen(void) const
-	{
-		return m_RestoreFullScreen;
-	}
+	Q_DECLARE_OPERATORS_FOR_FLAGS(QuickView::Persistence)
 
 QT_UTILS_NAMESPACE_END
 
