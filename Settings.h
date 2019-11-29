@@ -50,12 +50,15 @@ QT_UTILS_NAMESPACE_BEGIN
 		static inline void							Sync(void);
 		static inline bool							Contains(const QString & key);
 		static inline void							Clear(void);
+		static inline void							Remove(const QString & key);
+		static inline bool							IsInitialized(void);
 
 		// QML API
 		Q_INVOKABLE QVariant	get(const QString & key, QVariant defaultValue = QVariant()) const;
 		Q_INVOKABLE void		set(const QString & key, QVariant value, bool sync = true);
 		Q_INVOKABLE bool		init(const QString & key, QVariant value, bool sync = true);
 		Q_INVOKABLE bool		contains(const QString & key) const;
+		Q_INVOKABLE void		remove(const QString & key);
 		Q_INVOKABLE void		sync(void);
 
 	private:
@@ -148,6 +151,25 @@ QT_UTILS_NAMESPACE_BEGIN
 		{
 			Instance->clear();
 		}
+	}
+
+	//
+	//! Remove a setting.
+	//
+	inline void Settings::Remove(const QString & key)
+	{
+		if (Instance != nullptr)
+		{
+			Instance->remove(key);
+		}
+	}
+
+	//!
+	//! Returns true if Settings has been instanciated.
+	//!
+	inline bool Settings::IsInitialized(void)
+	{
+		return Instance != nullptr;
 	}
 
 	//!

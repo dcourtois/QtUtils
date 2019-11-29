@@ -94,6 +94,14 @@ QT_UTILS_NAMESPACE_BEGIN
 	}
 
 	//!
+	//! Remove a setting.
+	//!
+	void Settings::remove(const QString & key)
+	{
+		QSettings::remove(key);
+	}
+
+	//!
 	//! Sync the settings.
 	//!
 	void Settings::sync(void)
