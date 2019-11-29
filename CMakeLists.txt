@@ -75,4 +75,9 @@ target_compile_definitions (QtUtils
 		$<$<CONFIG:Release>:QT_NO_DEBUG_OUTPUT>
 		$<$<CONFIG:Release>:QT_NO_INFO_OUTPUT>
 		$<$<CONFIG:Release>:QT_NO_WARNING_OUTPUT>
+
+		# Platform
+		$<$<PLATFORM_ID:Windows>:WINDOWS>
+		$<$<PLATFORM_ID:Linux>:LINUX>
+		$<$<PLATFORM_ID:Darwin>:MACOS>
 )
