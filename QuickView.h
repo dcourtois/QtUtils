@@ -27,6 +27,23 @@ QT_UTILS_NAMESPACE_BEGIN
 	//! - Support dynamic switch to fullscreen using the `fullscreen` property.
 	//! - Makes itself available to QML through the global `rootView` property.
 	//!
+	//! Here is a quick example of how to use it:
+	//!
+	//! ```
+	//! int main(int argc, char ** argv)
+	//! {
+	//! 	QApplication app(argc, argv);
+	//! 	QuickView view;
+	//! 	view.setSource(QUrl("qrc:/Main.qml"));
+	//! 	view.Restore(800, 600, QWindow::Visibility::Windowed);
+	//! 	return app.exec();
+	//! }
+	//! ```
+	//!
+	//! That's all. On the first run, the view will have a 800 by 600 size,
+	//! and on the next runs, it will automatically restore the previous position,
+	//! size and maximized state.
+	//!
 	class QuickView
 		: public QQuickView
 	{
@@ -68,7 +85,7 @@ QT_UTILS_NAMESPACE_BEGIN
 		void				SetFullScreen(bool value, bool force = false);
 		inline Persistence	GetPersistence(void) const;
 		void				SetPersistence(Persistence value);
-		inline bool			GetRestoreSize(void) const;
+		void				Restore(int width, int height, QWindow::Visibility visibility);
 
 	protected:
 
@@ -76,9 +93,6 @@ QT_UTILS_NAMESPACE_BEGIN
 		bool	eventFilter(QObject * watched, QEvent * event) override;
 
 	private:
-
-		// C++ API
-		void	RestoreSettings(void);
 
 		//! Persitence flags
 		Persistence m_Persistence;

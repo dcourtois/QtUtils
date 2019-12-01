@@ -29,10 +29,6 @@ QT_UTILS_NAMESPACE_BEGIN
 
 		// install event filtering
 		this->installEventFilter(this);
-
-		// restore settings
-		this->RestoreSettings();
-
 	}
 
 	//!
@@ -93,72 +89,18 @@ QT_UTILS_NAMESPACE_BEGIN
 	}
 
 	//!
-	//! It's completely unfathomable to me that there is no "easy" way to catch the "I'm about to be
-	//! closed" event in Qt... Try Google'ing this, a ton of people have the same problem. There's
-	//! a closing signals, but https://bugreports.qt.io/browse/QTBUG-55722... 3 years later, still
-	//! have to install a filter that will be called for EACH f...ing event, just to do some stuff when
-	//! I'm about to be closed...
+	//! Restore the settings. This must be called before the view is ready.
 	//!
-	//! Oh, and reimplementing this method in itself does nothing, we have to call installEventFilter
-	//! on ourself. Why can't I just override a closeEvent virtual and be done with it ? No idea...
+	//! @param width
+	//!		Default width (used on the first run)
 	//!
-	//! @note
-	//!		Since I'm kind of forced to use this mechanism, might as well move all the state tracking
-	//!		logic in here. This is why the code does not only check for the close state.
+	//! @param height
+	//!		Default height (used on the first run)
 	//!
-	bool QuickView::eventFilter(QObject * watched, QEvent * event)
-	{
-		switch (event->type())
-		{
-			case QEvent::WindowStateChange:
-			{
-				if (this->windowState() == Qt::WindowState::WindowMaximized)
-				{
-					m_Maximized = true;
-					m_FullScreen = false;
-				}
-				else if (this->windowState() == Qt::WindowState::WindowFullScreen)
-				{
-					m_FullScreen = true;
-					m_Maximized = false;
-				}
-				else if (this->windowState() != Qt::WindowState::WindowMinimized)
-				{
-					m_FullScreen = false;
-					m_Maximized = false;
-					m_WindowedGeometry = this->geometry();
-				}
-				break;
-			}
-
-			case QEvent::Close:
-			{
-				if (m_Maximized == false && m_FullScreen == false)
-				{
-					m_WindowedGeometry = this->geometry();
-				}
-
-				Settings::Set("RootView.Position",		m_WindowedGeometry.topLeft());
-				Settings::Set("RootView.Size",			m_WindowedGeometry.size());
-				Settings::Set("RootView.Maximized",		m_Maximized);
-				Settings::Set("RootView.FullScreen",	m_FullScreen);
-				Settings::Set("RootView.Version", 		s_version);
-
-				break;
-			}
-
-			default:
-				break;
-		}
-
-		// let the base class handle the event
-		return QQuickView::eventFilter(watched, event);
-	}
-
+	//! @param visibility
+	//!		Default visibility (used on the first run)
 	//!
-	//! Restore settings
-	//!
-	void QuickView::RestoreSettings(void)
+	void QuickView::Restore(int width, int height, QWindow::Visibility visibility)
 	{
 		// make sure state updates are disabled
 		Q_ASSERT(this->IsReady() == false);
@@ -235,7 +177,8 @@ QT_UTILS_NAMESPACE_BEGIN
 		// first time, show the window and set options that might have been set from QML
 		else
 		{
-			this->setVisibility(m_Maximized == true ? QWindow::Maximized : QWindow::Windowed);
+			this->setVisibility(visibility);
+			this->resize(width, height);
 
 			m_WindowedGeometry = this->geometry();
 
@@ -244,6 +187,69 @@ QT_UTILS_NAMESPACE_BEGIN
 				this->SetFullScreen(true, true);
 			}
 		}
+	}
+
+	//!
+	//! It's completely unfathomable to me that there is no "easy" way to catch the "I'm about to be
+	//! closed" event in Qt... Try Google'ing this, a ton of people have the same problem. There's
+	//! a closing signals, but https://bugreports.qt.io/browse/QTBUG-55722... 3 years later, still
+	//! have to install a filter that will be called for EACH f...ing event, just to do some stuff when
+	//! I'm about to be closed...
+	//!
+	//! Oh, and reimplementing this method in itself does nothing, we have to call installEventFilter
+	//! on ourself. Why can't I just override a closeEvent virtual and be done with it ? No idea...
+	//!
+	//! @note
+	//!		Since I'm kind of forced to use this mechanism, might as well move all the state tracking
+	//!		logic in here. This is why the code does not only check for the close state.
+	//!
+	bool QuickView::eventFilter(QObject * watched, QEvent * event)
+	{
+		switch (event->type())
+		{
+			case QEvent::WindowStateChange:
+			{
+				if (this->windowState() == Qt::WindowState::WindowMaximized)
+				{
+					m_Maximized = true;
+					m_FullScreen = false;
+				}
+				else if (this->windowState() == Qt::WindowState::WindowFullScreen)
+				{
+					m_FullScreen = true;
+					m_Maximized = false;
+				}
+				else if (this->windowState() != Qt::WindowState::WindowMinimized)
+				{
+					m_FullScreen = false;
+					m_Maximized = false;
+					m_WindowedGeometry = this->geometry();
+				}
+				break;
+			}
+
+			case QEvent::Close:
+			{
+				if (m_Maximized == false && m_FullScreen == false)
+				{
+					m_WindowedGeometry = this->geometry();
+				}
+
+				Settings::Set("RootView.Position",		m_WindowedGeometry.topLeft());
+				Settings::Set("RootView.Size",			m_WindowedGeometry.size());
+				Settings::Set("RootView.Maximized",		m_Maximized);
+				Settings::Set("RootView.FullScreen",	m_FullScreen);
+				Settings::Set("RootView.Version", 		s_version);
+
+				break;
+			}
+
+			default:
+				break;
+		}
+
+		// let the base class handle the event
+		return QQuickView::eventFilter(watched, event);
 	}
 
 QT_UTILS_NAMESPACE_END
