@@ -5,11 +5,6 @@
 #
 
 #
-# A few options to configure the library
-#
-option (QT_UTILS_GENERATE_DOCUMENTATION "OFF by default. When ON, a documentation of the API is generated." OFF)
-
-#
 # Override automoc options, in case the parent scope was using a precompiled header.
 #
 set (CMAKE_AUTOMOC ON)
