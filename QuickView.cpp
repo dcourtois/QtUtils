@@ -102,9 +102,6 @@ QT_UTILS_NAMESPACE_BEGIN
 	//!
 	void QuickView::Restore(int width, int height, QWindow::Visibility visibility)
 	{
-		// make sure state updates are disabled
-		Q_ASSERT(this->IsReady() == false);
-
 		// get the settings version
 		int version = Settings::Get("RootView.Version", 0);
 		bool firstTime = version == 0;
