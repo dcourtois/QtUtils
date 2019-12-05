@@ -131,16 +131,15 @@ QT_UTILS_NAMESPACE_BEGIN
 		}
 
 		// read the settings
-		const QPoint pos = Settings::Get("RootView.Position", this->position());
-		const QSize size = Settings::Get("RootView.Size", this->size());
-
-		// initialize internal states
-		// note : clamp position to the current screen
-		const QRect geom	= this->screen()->availableGeometry();
-		m_WindowedGeometry	= { qBound(geom.topLeft(), pos, toPoint(geom.size() - size)), size };
-		m_Maximized			= Settings::Get("RootView.Maximized", this->visibility() == QWindow::Maximized);
+		const QPoint pos	= Settings::Get("RootView.Position", this->position());
+		const QSize size	= Settings::Get("RootView.Size", this->size());
+		m_Maximized			= Settings::Get("RootView.Maximized", m_Maximized);
 		m_FullScreen		= Settings::Get("RootView.FullScreen", m_FullScreen);
 		m_Persistence		= QFlag(Settings::Get("RootView.Persistence", static_cast< int >(static_cast< QFlag >(m_Persistence))));
+
+		// clamp geometry to the current screen
+		const QRect geom	= this->screen()->availableGeometry();
+		m_WindowedGeometry	= { qBound(geom.topLeft(), pos, toPoint(geom.size() - size)), size };
 
 		// check if the full screen state has been overriden from QML
 		int forceFullScreen	= Settings::Get("RootView.ForceFullScreen", 0);
