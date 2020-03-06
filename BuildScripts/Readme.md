@@ -1,11 +1,13 @@
 Introduction
 ============
 
+A little story in 5 acts:
+
 1. Mandatory connection to a Qt account to be able to install Qt from the Qt maintenance tool, "for our own good".
-2. Really ? At least don't be f..ing hypocrits about it ...
+2. First reaction: "... really ?" (at least don't give us that bullshit argument and assume being an asshole company)
 3. Anyway, created an account just for that
-4. Connect > don't have a license > click on the link to get one > lands on the Qt website where I can choose Open Source or Commercial
-5. No matter what I do from here, I can't seem to get a license, I don't know what the hell I should do to just install Qt.
+4. Connect > don't have a license > click on the privded link to get one > lands on the Qt website where I can choose Open Source or Commercial ...
+5. And no matter what I do from here, I can't seem to get a license, I don't know what the hell I should do to just install Qt.
 
 SO !
 
