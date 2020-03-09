@@ -9,8 +9,9 @@ pushd "%QT_DIR%/sources"
 call git checkout %*
 
 ::
-:: Update the submodules
+:: Update
 ::
+call git pull
 call git submodule update
 
 popd
