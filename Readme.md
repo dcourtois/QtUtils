@@ -12,13 +12,6 @@ Content
 Each of the utility is commented, but following is a small overview of each one. For more information,
 check the comments directly in the sources.
 
-All utility support an optional namespace to avoid name clashes. To use this, just define `QT_UTILS_NAMESPACE`
-to the namespace you want to use when compiling.
-
-These utilities are meant to be dropped in your projects. Just add the .cpp and .h files that you need
-to your project files. Note that some utilities depends on one another, in which case the dependency
-is listed in this readme.
-
 Qt5.natvis
 ----------
 
@@ -62,11 +55,34 @@ so that there's no context switch.
 * It exposes itself to the internal engine's root context as the global QML property "rootView"
 so that you can toggle fullscreen and be notified from your QML application.
 
+Job
+---
+
+A minimal class that can be used to push a new job on the global thread pool. This one is really
+simple, and is used like this:
+
+```.cpp
+new Job([] (void) {
+	// this is running on a secondary thread, and the Job instance is automatically
+	// deleted by the thread pool once the job is done running (e.g. you exist this lambda)
+});
+```
+
+HttpRequest
+-----------
+
+A few functions used to retrieve stuff from http(s) requests. It provides 2 simple functions, one
+retrieving the data synchronously (it blocks the current thread until the request is completed)
+and the other asynchronously (it returns immediately, and errors or results are handled through
+2 provided callbacks)
+
+It also handles 1 redirection automatically so you don't have to bother too much.
+
 Utils
 -----
 
 This header-only file contains small generic helpers:
 
-* arithmetics operators for QPoint(F)
-* component-wise qMin, qMax and qBound for QPoint(F)
-* conversion between QPoint(F) and QSize(F)
+* arithmetics operators for `QPoint(F)`
+* component-wise `qMin`, `qMax` and `qBound` for `QPoint(F)`
+* conversion between `QPoint(F)` and `QSize(F)`

@@ -27,6 +27,10 @@ find_package (Qt5 5
 add_library (QtUtils
 	File.cpp
 	File.h
+	HttpRequest.cpp
+	HttpRequest.h
+	Job.cpp
+	Job.h
 	QuickView.cpp
 	QuickView.h
 	Settings.cpp
