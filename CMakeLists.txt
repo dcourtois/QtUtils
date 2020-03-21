@@ -1,8 +1,25 @@
 #
-# This file is meant to be used by just `add_subdirectory ("path_to_this_file")`
+# This library is meant to be used by just `add_subdirectory ("path_to_this_folder")`
 # It will define a QtUtils library that you can then add to your target using `target_add_libraries`
 # It will provide all required include paths, etc.
 #
+# Just before adding this directory, you can define a few variables to customize the
+# built library:
+#
+# - QT_UTILS_NAMESPACE	: By default, no namespace is used. But since the names of the
+#						  classes defined in this lib might clash with yours, you can
+#						  set this variable to a non-empty string, which will then
+#						  be used as the namespace for all QtUtils classes.
+#
+
+#
+# Check options
+#
+if (DEFINED QT_UTILS_NAMESPACE)
+	set (QT_UTILS_NAMESPACE_USED 1)
+else ()
+	set (QT_UTILS_NAMESPACE_USED 0)
+endif ()
 
 #
 # Override automoc options, in case the parent scope was using a precompiled header.
@@ -79,4 +96,8 @@ target_compile_definitions (QtUtils
 		$<$<PLATFORM_ID:Windows>:WINDOWS>
 		$<$<PLATFORM_ID:Linux>:LINUX>
 		$<$<PLATFORM_ID:Darwin>:MACOS>
+
+	PUBLIC
+		# Namespace
+		$<${QT_UTILS_NAMESPACE_USED}:QT_UTILS_NAMESPACE=${QT_UTILS_NAMESPACE}>
 )
