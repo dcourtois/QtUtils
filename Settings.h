@@ -52,6 +52,7 @@ QT_UTILS_NAMESPACE_BEGIN
 		static inline void							Clear(void);
 		static inline void							Remove(const QString & key);
 		static inline bool							IsInitialized(void);
+		static inline Settings *					Instance(void);
 
 		// QML API
 		Q_INVOKABLE QVariant	get(const QString & key, QVariant defaultValue = QVariant()) const;
@@ -170,6 +171,16 @@ QT_UTILS_NAMESPACE_BEGIN
 	inline bool Settings::IsInitialized(void)
 	{
 		return Instance != nullptr;
+	}
+
+	//!
+	//! Get the current instance. Might be nullptr. Use only to bind, for all the other
+	//! functionalities, use the C++ API static methods, they already check if the instance
+	//! already exists.
+	//!
+	inline Settings * Settings::Instance(void)
+	{
+		return Instance;
 	}
 
 	//!

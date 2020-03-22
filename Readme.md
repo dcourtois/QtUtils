@@ -39,6 +39,71 @@ This class simply adds the missing features and can be shared with a QML context
 class (yes I know) You just declare 1 instance somewhere, you can share this instance to QML, and you
 can then update settings from everywhere and keep track of what's going on.
 
+Example creation:
+
+```.cpp
+// Create an instance somewhere. I usually create one in my main function so that it has the
+// same lifetime as my application
+int main(int argc, char ** argv)
+{
+	Settings settings;
+
+	// then I create my app in its own scope so that settings outlive it, in case I need to store
+	// settings in the destruction of the app.
+	{
+		QApplication application(argc, argv);
+		// ...
+
+		// if your application is a QML application, you can make the settings instance available to QML
+		// like this (assuming rootContext is your QQmlContext root context):
+		qmlContext->setContextProperties({
+			{ "settings", QVariant::fromValue(&settings) }
+		});
+	}
+
+	return 0;
+}
+```
+
+Example usage:
+
+```.cpp
+// now you can add setting by simply setting them
+Settings::Set("Hello", "World");
+
+// get some settings (with or without a default value)
+QString hello = Settings::Get< QString >("Hello");
+QString foo = Settings::Get("Foo", QString("Bar"));
+
+// and connect a slot to detect setting changes
+QObject::connect(Settings::Instance(), &Settings::settingChanged, [] (QString key, QVariant oldValue, QVariant value) {
+	// do stuff
+});
+```
+
+And in QML:
+
+```.qml
+Component.onCompleted: {
+	// set
+	settings.set("Hello", "from QML");
+
+	// get
+	const stuff = settings.get("Stuff", -1);
+}
+
+// bind
+Connections {
+	target: settings
+	onSettingChanged: {
+		// do something with it. key, oldValue and value are accessible here.
+	}
+}
+```
+
+There are additional functionalities, check `Settings.h/cpp` for documentation.
+
+
 QuickView
 ---------
 
