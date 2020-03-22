@@ -22,7 +22,7 @@ QT_UTILS_NAMESPACE_BEGIN
 		: m_Persistence(PersistenceFlags::All)
 		, m_Maximized(false)
 		, m_FullScreen(false)
-		, m_Flags(0)
+		, m_Flags{}
 	{
 		// make the view control the root object size
 		this->setResizeMode(QQuickView::ResizeMode::SizeRootObjectToView);
