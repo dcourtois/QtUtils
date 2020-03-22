@@ -19,56 +19,65 @@ QT_UTILS_NAMESPACE_BEGIN
 	//! @param url
 	//!		The url to request.
 	//!
-	//! @param retry
-	//!		Do not use. This is used internally to handle URL rediction retries.
+	//! @param networkManager
+	//!		Optional network manager to use. If not specified or nullptr, a global one defined in the
+	//!		QtUtils library is used.
 	//!
 	//! @returns
 	//!		The reply or an empty array.
 	//!
-	QByteArray RequestUrl(const QString & url, int retry)
+	QByteArray RequestUrl(const QString & url, QNetworkAccessManager * networkManager)
 	{
-		if (retry == -1)
+		// check the manager
+		if (networkManager == nullptr)
 		{
-			return QByteArray();
+			networkManager = &s_NetworkManager;
 		}
 
-		// prepare the request
-		QNetworkRequest request;
-		request.setUrl(QUrl(url));
-
-		// send
-		QNetworkReply * reply = s_NetworkManager.get(request);
-
-		// wait for the reply
-		QEventLoop loop;
-		while (reply->isFinished() == false)
+		// to handle http redirections
+		QString address = url;
+		for (int i = 0; i < 2; ++i)
 		{
-			loop.processEvents();
-		}
+			// prepare the request
+			QNetworkRequest request;
+			request.setUrl(QUrl(address));
 
-		if (reply->error() != QNetworkReply::NoError)
-		{
-			reply->deleteLater();
-			return QByteArray();
-		}
-		else
-		{
-			QVariant statusCode = reply->attribute(QNetworkRequest::Attribute::HttpStatusCodeAttribute);
-			if (statusCode.isValid())
+			// send
+			QNetworkReply * reply = networkManager->get(request);
+
+			// wait for the reply
+			QEventLoop loop;
+			while (reply->isFinished() == false)
 			{
-				// redirect
-				if (statusCode.toInt() == 301)
-				{
-					QString redirection = reply->header(QNetworkRequest::KnownHeaders::LocationHeader).toString();
-					reply->deleteLater();
-					return RequestUrl(redirection, retry - 1);
-				}
+				loop.processEvents();
 			}
 
-			QByteArray result = reply->readAll();
-			reply->deleteLater();
-			return result;
+			if (reply->error() != QNetworkReply::NoError)
+			{
+				reply->deleteLater();
+				return QByteArray();
+			}
+			else
+			{
+				QVariant statusCode = reply->attribute(QNetworkRequest::Attribute::HttpStatusCodeAttribute);
+				if (statusCode.isValid())
+				{
+					// redirect
+					if (statusCode.toInt() == 301)
+					{
+						address = reply->header(QNetworkRequest::KnownHeaders::LocationHeader).toString();
+						reply->deleteLater();
+						continue;
+					}
+				}
+
+				QByteArray result = reply->readAll();
+				reply->deleteLater();
+				return result;
+			}
 		}
+
+		return QByteArray();
 	}
 
 	//!
@@ -86,14 +95,24 @@ QT_UTILS_NAMESPACE_BEGIN
 	//! @param failure
 	//!		A function that will be called if the request failed.
 	//!
-	void RequestUrl(const QString & url, const SuccessCallback & success, const FailureCallback & failure)
+	//! @param networkManager
+	//!		Optional network manager to use. If not specified or nullptr, a global one defined in the
+	//!		QtUtils library is used.
+	//!
+	void RequestUrl(const QString & url, const SuccessCallback & success, const FailureCallback & failure, QNetworkAccessManager * networkManager)
 	{
+		// check the manager
+		if (networkManager == nullptr)
+		{
+			networkManager = &s_NetworkManager;
+		}
+
 		// prepare the request
 		QNetworkRequest request;
 		request.setUrl(QUrl(url));
 
 		// send
-		QNetworkReply * reply = s_NetworkManager.get(request);
+		QNetworkReply * reply = networkManager->get(request);
 		QObject::connect(reply, &QNetworkReply::finished, [=] (void) {
 			QNetworkReply::NetworkError error = reply->error();
 			QVariant statusCode = reply->attribute(QNetworkRequest::Attribute::HttpStatusCodeAttribute);

@@ -22,8 +22,8 @@ QT_UTILS_NAMESPACE_BEGIN
 	typedef std::function< void (QNetworkReply::NetworkError error, QString errorString) > FailureCallback;
 
 	// helpers
-	QByteArray	RequestUrl(const QString & url, int retry = 1);
-	void		RequestUrl(const QString & url, const SuccessCallback & success, const FailureCallback & failure);
+	QByteArray	RequestUrl(const QString & url, QNetworkAccessManager * networkManager = nullptr);
+	void		RequestUrl(const QString & url, const SuccessCallback & success, const FailureCallback & failure, QNetworkAccessManager * networkManager = nullptr);
 
 QT_UTILS_NAMESPACE_END
 
