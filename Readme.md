@@ -71,12 +71,34 @@ new Job([] (void) {
 HttpRequest
 -----------
 
-A few functions used to retrieve stuff from http(s) requests. It provides 2 simple functions, one
-retrieving the data synchronously (it blocks the current thread until the request is completed)
-and the other asynchronously (it returns immediately, and errors or results are handled through
-2 provided callbacks)
+A few functions used to retrieve stuff from http(s) requests.
 
-It also handles 1 redirection automatically so you don't have to bother too much.
+Synchronously:
+
+```.cpp
+// this call blocks the current thread
+QByteArray reply = RequestUrl("https://some_url");
+```
+
+Asynchronously:
+
+```.cpp
+// this call returns immediately
+RequestUrl(
+	// the URL
+	"https://some_url",
+
+	// the success callback
+	[] (QByteArray reply) {
+		// process the reply. this is executed in a secondary thread
+	},
+
+	// the failure callback
+	[] (QNetworkReply::NetworkError error, QString errorString) {
+		// log errors, do stuff. this is executed in a secondary thread
+	},
+);
+```
 
 Utils
 -----
