@@ -7,7 +7,7 @@
 QT_UTILS_NAMESPACE_BEGIN
 
 	// statics
-	Settings *					Settings::Instance		= nullptr;
+	Settings *					Settings::s_Instance	= nullptr;
 	const QSettings::Format		Settings::CustomFormat	= Settings::RegisterFormat();
 
 	//!
@@ -36,9 +36,9 @@ QT_UTILS_NAMESPACE_BEGIN
 	Settings::Settings(const QString & path, QSettings::Format format)
 		: QSettings(path, format)
 	{
-		Q_ASSERT(Instance == nullptr);
+		Q_ASSERT(s_Instance == nullptr);
 		Q_ASSERT(this->isWritable() == true);
-		Instance = this;
+		s_Instance = this;
 	}
 
 	//!

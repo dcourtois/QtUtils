@@ -95,7 +95,7 @@ QT_UTILS_NAMESPACE_BEGIN
 		template< typename T > static inline bool	Write(QIODevice & device, T value);
 
 		//! The single instance of the settings
-		static Settings * Instance;
+		static Settings * s_Instance;
 
 		//! Our custom format
 		static const QSettings::Format CustomFormat;
@@ -108,8 +108,8 @@ QT_UTILS_NAMESPACE_BEGIN
 	template< typename T >
 	inline T Settings::Get(const QString & key, T defaultValue)
 	{
-		return Instance != nullptr ?
-			Instance->get(key, defaultValue).template value< T >() :
+		return s_Instance != nullptr ?
+			s_Instance->get(key, defaultValue).template value< T >() :
 			T();
 	}
 
@@ -119,9 +119,9 @@ QT_UTILS_NAMESPACE_BEGIN
 	template< typename T >
 	inline void Settings::Set(const QString & key, T value, bool sync)
 	{
-		if (Instance != nullptr)
+		if (s_Instance != nullptr)
 		{
-			Instance->set(key, value, sync);
+			s_Instance->set(key, value, sync);
 		}
 	}
 
@@ -132,7 +132,7 @@ QT_UTILS_NAMESPACE_BEGIN
 	template< typename T >
 	inline bool Settings::Init(const QString & key, T value, bool sync)
 	{
-		return Instance != nullptr && Instance->init(key, value, sync);
+		return s_Instance != nullptr && s_Instance->init(key, value, sync);
 	}
 
 	//!
@@ -140,7 +140,7 @@ QT_UTILS_NAMESPACE_BEGIN
 	//
 	inline bool Settings::Contains(const QString & key)
 	{
-		return Instance != nullptr && Instance->contains(key);
+		return s_Instance != nullptr && s_Instance->contains(key);
 	}
 
 	//!
@@ -148,9 +148,9 @@ QT_UTILS_NAMESPACE_BEGIN
 	//
 	inline void Settings::Clear(void)
 	{
-		if (Instance != nullptr)
+		if (s_Instance != nullptr)
 		{
-			Instance->clear();
+			s_Instance->clear();
 		}
 	}
 
@@ -159,9 +159,9 @@ QT_UTILS_NAMESPACE_BEGIN
 	//
 	inline void Settings::Remove(const QString & key)
 	{
-		if (Instance != nullptr)
+		if (s_Instance != nullptr)
 		{
-			Instance->remove(key);
+			s_Instance->remove(key);
 		}
 	}
 
@@ -170,7 +170,7 @@ QT_UTILS_NAMESPACE_BEGIN
 	//!
 	inline bool Settings::IsInitialized(void)
 	{
-		return Instance != nullptr;
+		return s_Instance != nullptr;
 	}
 
 	//!
@@ -180,7 +180,7 @@ QT_UTILS_NAMESPACE_BEGIN
 	//!
 	inline Settings * Settings::Instance(void)
 	{
-		return Instance;
+		return s_Instance;
 	}
 
 	//!
@@ -188,9 +188,9 @@ QT_UTILS_NAMESPACE_BEGIN
 	//
 	inline void Settings::Sync(void)
 	{
-		if (Instance != nullptr)
+		if (s_Instance != nullptr)
 		{
-			Instance->sync();
+			s_Instance->sync();
 		}
 	}
 
