@@ -5,10 +5,11 @@ After the dick-move from Qt that forced users to have an account to install Qt. 
 justification they posted on their blog... I don't mind the move in itself, but I really fucking hate it when
 people are being hypocrits and justify those type of moves as being made "for the good of our users".
 
-For my own good ? Really ? Before this I couldn't download and update the libraries in a few clicks. After this
-change ? I had to create an account just for that and provide you with personal data. And even after I did, I
-couldn't figure out own to fucking download the libs !!! The installer says I don't have a license, and the link
-provided send me to the Qt website where I have no idea what to do...
+For my own good ? Really ? Before this I could download and update the libraries in a few clicks. After this
+change ? I have to create an account just for that and provide you with personal data. And even after I did, I
+couldn't figure out own to fucking install the libs !!! The installer says I don't have a license, and the link
+provided send me to the Qt website, and from there, no matter what I do, I couldn't find how to get this "license"
+that lets me install the library !
 
 How the FUCK IS THIS FOR MY OWN GOOD ?????????
 
