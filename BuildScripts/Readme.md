@@ -1,55 +1,57 @@
 Introduction
 ============
 
-A little story in 5 acts:
+After the dick-move from Qt that forced users to have an account to install Qt. Worst part is the piece of shit
+justification they posted on their blog... I don't mind the move in itself, but I really fucking hate it when
+people are being hypocrits and justify those type of moves as being made "for the good of our users".
 
-1. Mandatory connection to a Qt account to be able to install Qt from the Qt maintenance tool, "for our own good".
-2. First reaction: "... really ?" (at least don't give us that bullshit argument and assume being an asshole company)
-3. Anyway, created an account just for that
-4. Connect > don't have a license > click on the privded link to get one > lands on the Qt website where I can choose Open Source or Commercial ...
-5. And no matter what I do from here, I can't seem to get a license, I don't know what the hell I should do to just install Qt.
+For my own good ? Really ? Before this I couldn't download and update the libraries in a few clicks. After this
+change ? I had to create an account just for that and provide you with personal data. And even after I did, I
+couldn't figure out own to fucking download the libs !!! The installer says I don't have a license, and the link
+provided send me to the Qt website where I have no idea what to do...
 
-SO !
+How the FUCK IS THIS FOR MY OWN GOOD ?????????
 
-After this dick-move from Qt, I decided to use my own build. After all, Qt is "still" open source (seing the way things go, and since the
-main repository is hosted by Qt, I wouldn't be surprised if at some point they decide to make the sources only available from
-an account ...)
+Sorry for whoever reads this, I had to let this out of my system.
 
-And since I already have this small repo that I use in some of my pet projects, I decided to make my build scripts available.
+Now, that being said, I'm still grateful for the Qt libraries and all the work behind it. And since I'm not willing
+switch to some other framework, here are the scripts I use to build my own Qt libraries.
 
 
 Building Qt
 ===========
 
-This is still a WIP page. All my computers are already setup, so those scripts might not work out of the box for you. Also, I do
-not care about stuff I'm not using, so you might miss some stuff (for instance I think OpenSSL is not supported out of the box, etc.)
+This is still a WIP page. All my computers are already setup, so those scripts might not work out of the box for you.
+Also, I do not care about stuff I'm not using, so you might miss some stuff (for instance I think OpenSSL is not supported
+out of the box, etc.)
 
 Basically to build Qt from sources, open a Git bash terminal on Windows and:
 
 ```
-$> mkdir QtLibs
-$> cd QtLibs
-$> cp <QtUtils/BuildScripts>/*.bat .
-$> ./setup.bat
-$> ./update.bat 5.15
-$> ./build.bat
+$ mkdir QtLibs
+$ cd QtLibs
+$ cp <QtUtils/BuildScripts>/*.bat .
+$ ./setup.bat
+$ ./update.bat 5.15
+$ ./build.bat
 ```
 
-`<QtUtils/BuildScripts>` is the path to the folder where this file is located. The built Qt libraries will be located in the `install`
-folder, and once built, you can safely remove the `build` one.
+`<QtUtils/BuildScripts>` is the path to the folder where this file is located. The built Qt libraries will be located
+in the `install` folder, and once built, you can safely remove the `build` one.
 
+To build on Linux, it's just the same, just replace all the `.bat` extensions by `.sh`
 
 Content
 =======
 
-#### setup.bat
+#### setup.bat/sh
 
 Do once. This will clone and initiliaze the Qt sources repository.
 
-#### update.bat <branch>
+#### update.bat/sh branch
 
-This will update the repository to the latest version of the given branch.
+This will update the repository to the latest version of the given `branch`.
 
-#### build.bat
+#### build.bat/sh
 
 Main build script. It will configure Qt, build the libraries and install them.
