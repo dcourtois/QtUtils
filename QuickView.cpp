@@ -13,7 +13,7 @@
 QT_UTILS_NAMESPACE_BEGIN
 
 	//! Settings version
-	static constexpr int s_version = 1;
+	static constexpr int s_version = 2;
 
 	//!
 	//! Constructor
@@ -34,45 +34,29 @@ QT_UTILS_NAMESPACE_BEGIN
 	//!
 	//! Set the fullscreen state
 	//!
-	void QuickView::SetFullScreen(bool value, bool force)
+	void QuickView::SetFullScreen(bool value)
 	{
-		if (this->status() != QQuickView::Status::Ready && force == false)
+		if (m_FullScreen != value)
 		{
-			// not yet ready, this is probably called from QML
-			Settings::Set("RootView.ForceFullScreen", value == true ? 2 : 1);
-			return;
-		}
-		else
-		{
-			if (m_FullScreen != value || force == true)
+			qDebug() << "fullscreen changed: " << value;
+			m_FullScreen = value;
+			if (m_FullScreen == true)
 			{
-				if (m_FullScreen != value)
-				{
-					m_FullScreen = value;
-					if (m_FullScreen == true)
-					{
-						m_Flags = this->flags();
-						this->setFlags(Qt::Window | Qt::FramelessWindowHint);
-						this->setPosition({ 0, 0 });
-						this->resize(this->screen()->geometry().size());
-					}
-					else
-					{
-						this->setFlags(m_Flags);
-						this->setPosition(m_WindowedGeometry.topLeft());
-						this->resize(m_WindowedGeometry.size());
-						this->setVisibility(m_Maximized == true ? QWindow::Maximized : QWindow::Windowed);
-					}
-				}
-
-				if (this->IsReady() == true)
-				{
-					Settings::Set("RootView.FullScreen", m_FullScreen);
-				}
-
-				emit fullscreenChanged(m_FullScreen);
+				m_Flags = this->flags();
+				this->setFlags(Qt::Window | Qt::FramelessWindowHint);
+				this->setPosition({ 0, 0 });
+				this->resize(this->screen()->geometry().size());
+			}
+			else
+			{
+				this->setFlags(m_Flags);
+				this->setPosition(m_WindowedGeometry.topLeft());
+				this->resize(m_WindowedGeometry.size());
+				this->setVisibility(m_Maximized == true ? QWindow::Maximized : QWindow::Windowed);
 			}
 		}
+
+		emit fullscreenChanged(m_FullScreen);
 	}
 
 	//!
@@ -107,27 +91,23 @@ QT_UTILS_NAMESPACE_BEGIN
 		bool firstTime = version == 0;
 
 		// update the settings
-		for (; version < s_version; version = Settings::Get("RootView.Version", 0))
+		switch (version)
 		{
-			switch (version)
-			{
-				case 0:
-					// remove settings that are no longer used
-					Settings::Remove("RootView.RestorePosition");
-					Settings::Remove("RootView.RestoreSize");
-					Settings::Remove("RootView.RestoreMaximized");
-					Settings::Remove("RootView.RestoreFullScreen");
-					Settings::Remove("RootView.FirstTime");
-					Settings::Remove("RootView.Init");
+			case 0:
+				Settings::Remove("RootView.RestorePosition");
+				Settings::Remove("RootView.RestoreSize");
+				Settings::Remove("RootView.RestoreMaximized");
+				Settings::Remove("RootView.RestoreFullScreen");
+				Settings::Remove("RootView.FirstTime");
+				Settings::Remove("RootView.Init");
+				Settings::Set("RootView.Persistence", static_cast< unsigned int >(m_Persistence));
 
-					// update to version 1
-					Settings::Set("RootView.Persistence",	static_cast< unsigned int >(m_Persistence));
-					Settings::Set("RootView.Version",		1);
-					break;
+			case 1:
+				Settings::Remove("RootView.ForceFullScreen");
+				Settings::Remove("RootView.FullScreen");
 
-				default:
-					break;
-			}
+			default:
+				break;
 		}
 
 		// read the settings
@@ -136,7 +116,6 @@ QT_UTILS_NAMESPACE_BEGIN
 			Settings::Get("RootView.Size",		this->size())
 		};
 		m_Maximized		= Settings::Get("RootView.Maximized", m_Maximized);
-		m_FullScreen	= Settings::Get("RootView.FullScreen", m_FullScreen);
 		m_Persistence	= QFlag(Settings::Get("RootView.Persistence", static_cast< int >(static_cast< QFlag >(m_Persistence))));
 
 		// sometimes when we disconnect a screen or change resolution (or some bug happens) the restored geometry
@@ -185,32 +164,20 @@ QT_UTILS_NAMESPACE_BEGIN
 			}
 		}
 
-		// check if the full screen state has been overriden from QML
-		int forceFullScreen	= Settings::Get("RootView.ForceFullScreen", 0);
-		Settings::Set("RootView.ForceFullScreen", 0);
-
 		// restore states as needed
 		if (firstTime == false)
 		{
-			if (m_Persistence.testFlag(PersistenceFlags::Position) == true && m_FullScreen == false)
+			if (m_Persistence.testFlag(PersistenceFlags::Position) == true)
 			{
 				this->setPosition(m_WindowedGeometry.topLeft());
 			}
-			if (m_Persistence.testFlag(PersistenceFlags::Size) == true && m_FullScreen == false)
+			if (m_Persistence.testFlag(PersistenceFlags::Size) == true)
 			{
 				this->resize(m_WindowedGeometry.size());
 			}
-			if (m_Persistence.testFlag(PersistenceFlags::Maximized) == true && m_FullScreen == false && forceFullScreen != 2)
+			if (m_Persistence.testFlag(PersistenceFlags::Maximized) == true)
 			{
 				this->setVisibility(m_Maximized == true ? QWindow::Maximized : QWindow::Windowed);
-			}
-			if (forceFullScreen != 0)
-			{
-				m_FullScreen = forceFullScreen == 2 ? true : false;
-			}
-			if (m_Persistence.testFlag(PersistenceFlags::FullScreen) == true || forceFullScreen != 0)
-			{
-				this->SetFullScreen(m_FullScreen, true);
 			}
 		}
 
@@ -219,13 +186,7 @@ QT_UTILS_NAMESPACE_BEGIN
 		{
 			this->setVisibility(visibility);
 			this->resize(width, height);
-
 			m_WindowedGeometry = this->geometry();
-
-			if (forceFullScreen == 2)
-			{
-				this->SetFullScreen(true, true);
-			}
 		}
 	}
 
@@ -249,21 +210,25 @@ QT_UTILS_NAMESPACE_BEGIN
 		{
 			case QEvent::WindowStateChange:
 			{
-				if (this->windowState() == Qt::WindowState::WindowMaximized)
+				switch (this->windowState())
 				{
-					m_Maximized = true;
-					m_FullScreen = false;
-				}
-				else if (this->windowState() == Qt::WindowState::WindowFullScreen)
-				{
-					m_FullScreen = true;
-					m_Maximized = false;
-				}
-				else if (this->windowState() != Qt::WindowState::WindowMinimized)
-				{
-					m_FullScreen = false;
-					m_Maximized = false;
-					m_WindowedGeometry = this->geometry();
+					case Qt::WindowState::WindowMaximized:
+						m_Maximized = true;
+						m_FullScreen = false;
+						break;
+
+					case Qt::WindowState::WindowFullScreen:
+						Q_ASSERT(false && "Use the `fullscreen` property of QuickView instead.");
+						break;
+
+					case Qt::WindowState::WindowNoState:
+						if (m_FullScreen == false) {
+							m_Maximized = false;
+						}
+						break;
+
+					default:
+						break;
 				}
 				break;
 			}
@@ -278,7 +243,6 @@ QT_UTILS_NAMESPACE_BEGIN
 				Settings::Set("RootView.Position",		m_WindowedGeometry.topLeft());
 				Settings::Set("RootView.Size",			m_WindowedGeometry.size());
 				Settings::Set("RootView.Maximized",		m_Maximized);
-				Settings::Set("RootView.FullScreen",	m_FullScreen);
 				Settings::Set("RootView.Version", 		s_version);
 
 				break;

@@ -82,7 +82,7 @@ QT_UTILS_NAMESPACE_BEGIN
 		// C++ API
 		inline bool			IsFullScreen(void) const;
 		inline bool			IsReady(void) const;
-		void				SetFullScreen(bool value, bool force = false);
+		void				SetFullScreen(bool value);
 		inline Persistence	GetPersistence(void) const;
 		void				SetPersistence(Persistence value);
 		void				Restore(int width, int height, QWindow::Visibility visibility);
