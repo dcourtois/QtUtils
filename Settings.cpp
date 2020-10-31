@@ -114,7 +114,7 @@ QT_UTILS_NAMESPACE_BEGIN
 	//!
 	QSettings::Format Settings::RegisterFormat(void)
 	{
-		auto format = QSettings::registerFormat("ini", Settings::Read, Settings::Write);
+		auto format = QSettings::registerFormat("bin", Settings::Read, Settings::Write);
 		Q_ASSERT(format != QSettings::InvalidFormat);
 		return format;
 	}
