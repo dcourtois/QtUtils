@@ -120,7 +120,7 @@ QT_UTILS_NAMESPACE_BEGIN
 					Settings::Remove("RootView.FirstTime");
 					Settings::Remove("RootView.Init");
 
-					// add settings of version 1
+					// update to version 1
 					Settings::Set("RootView.Persistence",	static_cast< unsigned int >(m_Persistence));
 					Settings::Set("RootView.Version",		1);
 					break;
@@ -131,15 +131,59 @@ QT_UTILS_NAMESPACE_BEGIN
 		}
 
 		// read the settings
-		const QPoint pos	= Settings::Get("RootView.Position", this->position());
-		const QSize size	= Settings::Get("RootView.Size", this->size());
-		m_Maximized			= Settings::Get("RootView.Maximized", m_Maximized);
-		m_FullScreen		= Settings::Get("RootView.FullScreen", m_FullScreen);
-		m_Persistence		= QFlag(Settings::Get("RootView.Persistence", static_cast< int >(static_cast< QFlag >(m_Persistence))));
+		m_WindowedGeometry = {
+			Settings::Get("RootView.Position",	this->position()),
+			Settings::Get("RootView.Size",		this->size())
+		};
+		m_Maximized		= Settings::Get("RootView.Maximized", m_Maximized);
+		m_FullScreen	= Settings::Get("RootView.FullScreen", m_FullScreen);
+		m_Persistence	= QFlag(Settings::Get("RootView.Persistence", static_cast< int >(static_cast< QFlag >(m_Persistence))));
 
-		// clamp geometry to the current screen
-		const QRect geom	= this->screen()->availableGeometry();
-		m_WindowedGeometry	= { qBound(geom.topLeft(), pos, toPoint(geom.size() - size)), size };
+		// sometimes when we disconnect a screen or change resolution (or some bug happens) the restored geometry
+		// can be entirely outside the availabe screen space. Make sure that the window will be partly visible.
+		// note that this is not perfect, but it should handle the most common setups and avoid the application
+		// window being entirely out of the available screen areas.
+		const QRect geom = this->screen()->availableVirtualGeometry();
+		if (m_WindowedGeometry.right() < 0)
+		{
+			m_WindowedGeometry.moveLeft(0);
+			if (m_WindowedGeometry.right() > geom.width())
+			{
+				m_WindowedGeometry.setWidth(geom.width());
+			}
+		}
+		if (m_WindowedGeometry.x() > geom.width())
+		{
+			if (m_WindowedGeometry.width() > geom.width())
+			{
+				m_WindowedGeometry.moveLeft(0);
+				m_WindowedGeometry.setWidth(geom.width());
+			}
+			else
+			{
+				m_WindowedGeometry.moveLeft(geom.width() - m_WindowedGeometry.width());
+			}
+		}
+		if (m_WindowedGeometry.bottom() < 0)
+		{
+			m_WindowedGeometry.moveTop(0);
+			if (m_WindowedGeometry.bottom() > geom.height())
+			{
+				m_WindowedGeometry.setHeight(geom.height());
+			}
+		}
+		if (m_WindowedGeometry.y() > geom.height())
+		{
+			if (m_WindowedGeometry.height() > geom.height())
+			{
+				m_WindowedGeometry.moveTop(0);
+				m_WindowedGeometry.setHeight(geom.height());
+			}
+			else
+			{
+				m_WindowedGeometry.moveTop(geom.height() - m_WindowedGeometry.height());
+			}
+		}
 
 		// check if the full screen state has been overriden from QML
 		int forceFullScreen	= Settings::Get("RootView.ForceFullScreen", 0);
@@ -170,7 +214,7 @@ QT_UTILS_NAMESPACE_BEGIN
 			}
 		}
 
-		// first time, show the window and set options that might have been set from QML
+		// first time, set the options that were passed to the method
 		else
 		{
 			this->setVisibility(visibility);
