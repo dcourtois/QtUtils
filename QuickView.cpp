@@ -38,7 +38,6 @@ QT_UTILS_NAMESPACE_BEGIN
 	{
 		if (m_FullScreen != value)
 		{
-			qDebug() << "fullscreen changed: " << value;
 			m_FullScreen = value;
 			if (m_FullScreen == true)
 			{
