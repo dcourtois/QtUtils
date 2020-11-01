@@ -207,6 +207,14 @@ QT_UTILS_NAMESPACE_BEGIN
 	{
 		switch (event->type())
 		{
+			case QEvent::Move:
+			case QEvent::Resize:
+				if (m_Maximized == false && m_FullScreen == false)
+				{
+					m_WindowedGeometry = this->geometry();
+				}
+				break;
+
 			case QEvent::WindowStateChange:
 			{
 				switch (this->windowState())
@@ -233,19 +241,12 @@ QT_UTILS_NAMESPACE_BEGIN
 			}
 
 			case QEvent::Close:
-			{
-				if (m_Maximized == false && m_FullScreen == false)
-				{
-					m_WindowedGeometry = this->geometry();
-				}
-
-				Settings::Set("RootView.Position",		m_WindowedGeometry.topLeft());
-				Settings::Set("RootView.Size",			m_WindowedGeometry.size());
-				Settings::Set("RootView.Maximized",		m_Maximized);
-				Settings::Set("RootView.Version", 		s_version);
-
+				Settings::Set("RootView.Position",		m_WindowedGeometry.topLeft(),	false);
+				Settings::Set("RootView.Size",			m_WindowedGeometry.size(),		false);
+				Settings::Set("RootView.Maximized",		m_Maximized,					false);
+				Settings::Set("RootView.Version", 		s_version,						false);
+				Settings::Sync();
 				break;
-			}
 
 			default:
 				break;
