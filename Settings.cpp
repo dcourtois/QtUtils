@@ -173,6 +173,7 @@ QT_UTILS_NAMESPACE_BEGIN
 			case Type::SizeF:		return Read(device, QSizeF{});
 			case Type::Rect:		return Read(device, QRect{});
 			case Type::RectF:		return Read(device, QRectF{});
+			case Type::Color:		return QColor(Read(device, 0.0f), Read(device, 0.0f), Read(device, 0.0f), Read(device, 0.0f));
 			default:				return QVariant();
 		}
 	}

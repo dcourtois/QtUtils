@@ -3,6 +3,7 @@
 
 #include "./Setup.h"
 
+#include <QColor>
 #include <QIODevice>
 #include <QRect>
 #include <QSettings>
@@ -80,6 +81,7 @@ QT_UTILS_NAMESPACE_BEGIN
 			SizeF,
 			Rect,
 			RectF,
+			Color,
 			Invalid,
 		};
 
@@ -310,6 +312,11 @@ QT_UTILS_NAMESPACE_BEGIN
 			case QMetaType::QRectF: {
 				const QRectF rect(value.toRectF());
 				return Write(device, Type::RectF) && Write(device, rect.left()) && Write(device, rect.right()) && Write(device, rect.width()) && Write(device, rect.height());
+			}
+
+			case QMetaType::QColor: {
+				const QColor color(value.value< QColor >());
+				return Write(device, Type::Color) && Write(device, color.redF()) && Write(device, color.greenF()) && Write(device, color.blueF()) && Write(device, color.alphaF());
 			}
 
 			default:
