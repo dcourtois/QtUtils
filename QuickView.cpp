@@ -38,16 +38,22 @@ QT_UTILS_NAMESPACE_BEGIN
 	{
 		if (m_FullScreen != value)
 		{
+			// note: don't remove the maxmized state: when we exit fullscreen, we want to go back to maximized.
 			m_FullScreen = value;
 			if (m_FullScreen == true)
 			{
+				// backup the state of the window
 				m_Flags = this->flags();
+				m_WindowedGeometry = GetRestoreRect();
+
+				// make it a frameless window occupying the whole screen
 				this->setFlags(Qt::Window | Qt::FramelessWindowHint);
 				this->setPosition({ 0, 0 });
 				this->resize(this->screen()->geometry().size());
 			}
 			else
 			{
+				// restore the window as it was previously
 				this->setFlags(m_Flags);
 				this->setPosition(m_WindowedGeometry.topLeft());
 				this->resize(m_WindowedGeometry.size());
@@ -56,6 +62,26 @@ QT_UTILS_NAMESPACE_BEGIN
 		}
 
 		emit fullscreenChanged(m_FullScreen);
+	}
+
+	//!
+	//! Set the window to maximized.
+	//!
+	void QuickView::SetMaximized(bool value)
+	{
+		if (m_Maximized != value)
+		{
+			m_Maximized = value;
+			if (m_Maximized == true)
+			{
+				this->showMaximized();
+			}
+			else
+			{
+				this->showNormal();
+			}
+			emit maximizedChanged(m_Maximized);
+		}
 	}
 
 	//!
@@ -116,6 +142,12 @@ QT_UTILS_NAMESPACE_BEGIN
 		};
 		m_Maximized		= Settings::Get("RootView.Maximized", m_Maximized);
 		m_Persistence	= QFlag(Settings::Get("RootView.Persistence", static_cast< int >(static_cast< QFlag >(m_Persistence))));
+
+		// notify if maximized is true
+		if (m_Maximized == true)
+		{
+			emit maximizedChanged(m_Maximized);
+		}
 
 		// sometimes when we disconnect a screen or change resolution (or some bug happens) the restored geometry
 		// can be entirely outside the availabe screen space. Make sure that the window will be partly visible.
@@ -190,47 +222,74 @@ QT_UTILS_NAMESPACE_BEGIN
 	}
 
 	//!
-	//! It's completely unfathomable to me that there is no "easy" way to catch the "I'm about to be
-	//! closed" event in Qt... Try Google'ing this, a ton of people have the same problem. There's
-	//! a closing signals, but https://bugreports.qt.io/browse/QTBUG-55722... 3 years later, still
-	//! have to install a filter that will be called for EACH f...ing event, just to do some stuff when
-	//! I'm about to be closed...
+	//! Local helper to change a variable and notify if the value actually changed
 	//!
-	//! Oh, and reimplementing this method in itself does nothing, we have to call installEventFilter
-	//! on ourself. Why can't I just override a closeEvent virtual and be done with it ? No idea...
+#define SET_PROPERTY(prop, value, notify)	\
+	if (prop != value)						\
+	{										\
+		prop = value;						\
+		notify(prop);						\
+	}
+
 	//!
-	//! @note
-	//!		Since I'm kind of forced to use this mechanism, might as well move all the state tracking
-	//!		logic in here. This is why the code does not only check for the close state.
+	//! At some point in time, I had to implement this method to be able to catch the "about to be
+	//! closed" event in order to save the view's settings, all because there no fucking way to just
+	//! have a virtual "onClose" method, like most everything else (try Google'ing this, a ton of
+	//! people have the same problem, also there's a closing signals, but
+	//! https://bugreports.qt.io/browse/QTBUG-55722... 3 years later, still have to install a filter
+	//! that will be called for EACH f...ing event, just to do some stuff when I'm about to be closed)
+	//!
+	//! But then I started noticing some bugs in how the view is restored depending on its state, and
+	//! (more annoyingly) depending on the platform.
+	//!
+	//! And now, I'm wondering what's the fucking point of a GUI abstraction library if it fucking
+	//! behaves differently on each fucking platform ????? Why the hell on Windows, frameless window
+	//! are set to fullscreen when calling showMaximized whereas on all other platforms it correctly
+	//! set the state to Maximized ?
+	//!
+	//! Why the fuck do I receive move and resize events before the state is set to maximized on Windows
+	//! whereas on Linux I receive the maximized event before the move and resize ones ??????
+	//!
+	//! Anyways, the whole mess of this method is to try and fix the fucking inconsistencies of Qt -_-
 	//!
 	bool QuickView::eventFilter(QObject * watched, QEvent * event)
 	{
 		switch (event->type())
 		{
+#ifndef WINDOWS
 			case QEvent::Move:
 			case QEvent::Resize:
 				if (m_Maximized == false && m_FullScreen == false)
 				{
 					m_WindowedGeometry = this->geometry();
 				}
-				break;
-
+#endif
 			case QEvent::WindowStateChange:
-			{
 				switch (this->windowState())
 				{
 					case Qt::WindowState::WindowMaximized:
-						m_Maximized = true;
-						m_FullScreen = false;
+						SET_PROPERTY(m_Maximized,	true,	maximizedChanged)
+						SET_PROPERTY(m_FullScreen,	false,	fullscreenChanged)
 						break;
 
 					case Qt::WindowState::WindowFullScreen:
-						Q_ASSERT(false && "Use the `fullscreen` property of QuickView instead.");
+						// ... for fuck's sake ...
+						if (this->windowStates().testFlag(Qt::WindowState::WindowMaximized))
+						{
+							SET_PROPERTY(m_Maximized,	true,	maximizedChanged)
+							SET_PROPERTY(m_FullScreen,	false,	fullscreenChanged)
+						}
+						else
+						{
+							// ok, real fullscreen state, buggy stuff, avoid at all cost
+							Q_ASSERT(false && "Do not use the fullscreen visibility. Use QuickView's custom fullscreen property instead");
+						}
 						break;
 
 					case Qt::WindowState::WindowNoState:
-						if (m_FullScreen == false) {
-							m_Maximized = false;
+						if (m_FullScreen == false)
+						{
+							SET_PROPERTY(m_Maximized, false, maximizedChanged)
 						}
 						break;
 
@@ -238,9 +297,9 @@ QT_UTILS_NAMESPACE_BEGIN
 						break;
 				}
 				break;
-			}
 
 			case QEvent::Close:
+				m_WindowedGeometry = GetRestoreRect();
 				Settings::Set("RootView.Position",		m_WindowedGeometry.topLeft(),	false);
 				Settings::Set("RootView.Size",			m_WindowedGeometry.size(),		false);
 				Settings::Set("RootView.Maximized",		m_Maximized,					false);
@@ -255,5 +314,29 @@ QT_UTILS_NAMESPACE_BEGIN
 		// let the base class handle the event
 		return QQuickView::eventFilter(watched, event);
 	}
+
+	//!
+	//! Helper used to get the correct restore rect.
+	//!
+	QRect QuickView::GetRestoreRect(void) const
+	{
+#ifdef WINDOWS
+		if (m_Maximized == true || m_FullScreen == true)
+		{
+			WINDOWPLACEMENT placement{};
+			GetWindowPlacement(reinterpret_cast< HWND >(this->winId()), &placement);
+			RECT & rect = placement.rcNormalPosition;
+			return {
+				QPoint{ rect.left, rect.top },
+				QSize{ rect.right - rect.left, rect.bottom - rect.top },
+			};
+		}
+		else
+#endif
+		{
+			return m_WindowedGeometry;
+		}
+	}
+
 
 QT_UTILS_NAMESPACE_END

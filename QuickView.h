@@ -66,12 +66,14 @@ QT_UTILS_NAMESPACE_BEGIN
 
 	private:
 
-		Q_PROPERTY(bool fullscreen			READ IsFullScreen			WRITE SetFullScreen			NOTIFY fullscreenChanged)
-		Q_PROPERTY(Persistence persistence	READ GetPersistence			WRITE SetPersistence		NOTIFY persistenceChanged)
+		Q_PROPERTY(bool fullscreen			READ IsFullScreen		WRITE SetFullScreen		NOTIFY fullscreenChanged)
+		Q_PROPERTY(bool maximized			READ IsMaximized		WRITE SetMaximized		NOTIFY maximizedChanged)
+		Q_PROPERTY(Persistence persistence	READ GetPersistence		WRITE SetPersistence	NOTIFY persistenceChanged)
 
 	signals:
 
 		void fullscreenChanged(bool fullscreen);
+		void maximizedChanged(bool maximized);
 		void persistenceChanged(Persistence persistence);
 
 	public:
@@ -80,9 +82,11 @@ QT_UTILS_NAMESPACE_BEGIN
 		QuickView(void);
 
 		// C++ API
-		inline bool			IsFullScreen(void) const;
 		inline bool			IsReady(void) const;
+		inline bool			IsFullScreen(void) const;
 		void				SetFullScreen(bool value);
+		inline bool			IsMaximized(void) const;
+		void				SetMaximized(bool value);
 		inline Persistence	GetPersistence(void) const;
 		void				SetPersistence(Persistence value);
 		void				Restore(int width, int height, QWindow::Visibility visibility);
@@ -93,6 +97,9 @@ QT_UTILS_NAMESPACE_BEGIN
 		bool	eventFilter(QObject * watched, QEvent * event) override;
 
 	private:
+
+		// helpers
+		QRect	GetRestoreRect(void) const;
 
 		//! Persitence flags
 		Persistence m_Persistence;
@@ -112,6 +119,14 @@ QT_UTILS_NAMESPACE_BEGIN
 	};
 
 	//!
+	//! Returns true if the status of the view is ready
+	//!
+	inline bool QuickView::IsReady(void) const
+	{
+		return this->status() == QQuickView::Status::Ready;
+	}
+
+	//!
 	//! Get the current fullscreen state.
 	//!
 	inline bool QuickView::IsFullScreen(void) const
@@ -120,11 +135,11 @@ QT_UTILS_NAMESPACE_BEGIN
 	}
 
 	//!
-	//! Returns true if the status of the view is ready
+	//! Get the current maximized state.
 	//!
-	inline bool QuickView::IsReady(void) const
+	inline bool QuickView::IsMaximized(void) const
 	{
-		return this->status() == QQuickView::Status::Ready;
+		return m_Maximized;
 	}
 
 	//!
