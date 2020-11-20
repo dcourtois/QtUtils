@@ -85,6 +85,33 @@ QT_UTILS_NAMESPACE_BEGIN
 	}
 
 	//!
+	//! Set the minimized state of the window
+	//!
+	void QuickView::SetMinimized(bool value)
+	{
+		if (m_Minimized != value)
+		{
+			m_Minimized = value;
+			if (m_Minimized == true)
+			{
+				this->showMinimized();
+			}
+			else
+			{
+				if (m_Maximized == true)
+				{
+					this->showMaximized();
+				}
+				else
+				{
+					this->showNormal();
+				}
+			}
+			emit minimizedChanged(m_Minimized);
+		}
+	}
+
+	//!
 	//! Set the restore state for position
 	//!
 	void QuickView::SetPersistence(Persistence value)
@@ -265,9 +292,15 @@ QT_UTILS_NAMESPACE_BEGIN
 				}
 #endif
 			case QEvent::WindowStateChange:
+				qDebug() << this->windowState();
 				switch (this->windowState())
 				{
+					case  Qt::WindowState::WindowMinimized:
+						SET_PROPERTY(m_Minimized,	true,	minimizedChanged)
+						break;
+
 					case Qt::WindowState::WindowMaximized:
+						SET_PROPERTY(m_Minimized,	false,	minimizedChanged)
 						SET_PROPERTY(m_Maximized,	true,	maximizedChanged)
 						SET_PROPERTY(m_FullScreen,	false,	fullscreenChanged)
 						break;
@@ -276,6 +309,7 @@ QT_UTILS_NAMESPACE_BEGIN
 						// ... for fuck's sake ...
 						if (this->windowStates().testFlag(Qt::WindowState::WindowMaximized))
 						{
+							SET_PROPERTY(m_Minimized,	false,	minimizedChanged)
 							SET_PROPERTY(m_Maximized,	true,	maximizedChanged)
 							SET_PROPERTY(m_FullScreen,	false,	fullscreenChanged)
 						}
@@ -287,7 +321,17 @@ QT_UTILS_NAMESPACE_BEGIN
 						break;
 
 					case Qt::WindowState::WindowNoState:
-						if (m_FullScreen == false)
+						// ok, if we come from a minimized state, we need to restore the "maximized"
+						if (m_Minimized == true)
+						{
+							SET_PROPERTY(m_Minimized, false, minimizedChanged);
+							if (m_Maximized)
+							{
+								this->showMaximized();
+							}
+
+						}
+						else if (m_FullScreen == false)
 						{
 							SET_PROPERTY(m_Maximized, false, maximizedChanged)
 						}
@@ -321,21 +365,16 @@ QT_UTILS_NAMESPACE_BEGIN
 	QRect QuickView::GetRestoreRect(void) const
 	{
 #ifdef WINDOWS
-		if (m_Maximized == true || m_FullScreen == true)
-		{
-			WINDOWPLACEMENT placement{};
-			GetWindowPlacement(reinterpret_cast< HWND >(this->winId()), &placement);
-			RECT & rect = placement.rcNormalPosition;
-			return {
-				QPoint{ rect.left, rect.top },
-				QSize{ rect.right - rect.left, rect.bottom - rect.top },
-			};
-		}
-		else
+		WINDOWPLACEMENT placement{};
+		GetWindowPlacement(reinterpret_cast< HWND >(this->winId()), &placement);
+		RECT & rect = placement.rcNormalPosition;
+		return {
+			QPoint{ rect.left, rect.top },
+			QSize{ rect.right - rect.left, rect.bottom - rect.top },
+		};
+#else
+		return m_WindowedGeometry;
 #endif
-		{
-			return m_WindowedGeometry;
-		}
 	}
 
 

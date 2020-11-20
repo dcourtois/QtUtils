@@ -68,12 +68,14 @@ QT_UTILS_NAMESPACE_BEGIN
 
 		Q_PROPERTY(bool fullscreen			READ IsFullScreen		WRITE SetFullScreen		NOTIFY fullscreenChanged)
 		Q_PROPERTY(bool maximized			READ IsMaximized		WRITE SetMaximized		NOTIFY maximizedChanged)
+		Q_PROPERTY(bool minimized			READ IsMinimized		WRITE SetMinimized		NOTIFY minimizedChanged)
 		Q_PROPERTY(Persistence persistence	READ GetPersistence		WRITE SetPersistence	NOTIFY persistenceChanged)
 
 	signals:
 
 		void fullscreenChanged(bool fullscreen);
 		void maximizedChanged(bool maximized);
+		void minimizedChanged(bool minimized);
 		void persistenceChanged(Persistence persistence);
 
 	public:
@@ -87,6 +89,8 @@ QT_UTILS_NAMESPACE_BEGIN
 		void				SetFullScreen(bool value);
 		inline bool			IsMaximized(void) const;
 		void				SetMaximized(bool value);
+		inline bool			IsMinimized(void) const;
+		void				SetMinimized(bool value);
 		inline Persistence	GetPersistence(void) const;
 		void				SetPersistence(Persistence value);
 		void				Restore(int width, int height, QWindow::Visibility visibility);
@@ -103,6 +107,9 @@ QT_UTILS_NAMESPACE_BEGIN
 
 		//! Persitence flags
 		Persistence m_Persistence;
+
+		//! minimized state
+		bool m_Minimized;
 
 		//! maximized state
 		bool m_Maximized;
@@ -140,6 +147,14 @@ QT_UTILS_NAMESPACE_BEGIN
 	inline bool QuickView::IsMaximized(void) const
 	{
 		return m_Maximized;
+	}
+
+	//!
+	//! Get the current minimized state.
+	//!
+	inline bool QuickView::IsMinimized(void) const
+	{
+		return m_Minimized;
 	}
 
 	//!
